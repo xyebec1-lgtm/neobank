@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NeoBank | Премиум карта + Кейсы + Апгрейд + Таблица лидеров</title>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabaseUrl = 'https://egefclatnfakhzodskrq.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnZWZjbGF0bmZha2h6b2Rza3JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NDA5NDgsImV4cCI6MjA5NjUxNjk0OH0.AyN1OgsDHJ_sgDNaeyAzEQfeewc-';
+        const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+        
+        async function saveScoreToLeaderboard(username, score) {
+            const { error } = await supabase.from('leaderboard').insert([{ username: username, score: score }]);
+            if (error) console.error('Ошибка сохранения:', error);
+            else console.log('Рекорд сохранён!');
+        }
+        
+        async function loadLeaderboard() {
+            const { data, error } = await supabase.from('leaderboard').select('username, score').order('score', { ascending: false }).limit(10);
+            const container = document.getElementById('leaderboardList');
+            if (!container) return;
+            if (error) { container.innerHTML = '<div class="tx-item">Ошибка загрузки</div>'; return; }
+            if (!data || data.length === 0) { container.innerHTML = '<div class="tx-item">Пока нет рекордов. Будь первым!</div>'; return; }
+            container.innerHTML = data.map((e,i)=>`<div class="tx-item"><span>${i+1}. ${escapeHtmlLeader(e.username)}</span><span style="font-weight:bold;color:#FFD966;">${e.score.toLocaleString('ru-RU')} ₽</span></div>`).join('');
+        }
+        function escapeHtmlLeader(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    </script>
+    
+    <!-- Анти-чит и блокировка консоли -->
+    <script>
+        (function() {
+            // Блокировка контекстного меню
+            document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+            // Блокировка клавиш разработчика
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12') { e.preventDefault(); return false; }
+                if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) { e.preventDefault(); return false; }
+                if (e.ctrlKey && e.key === 'U') { e.preventDefault(); return false; }
+                if (e.ctrlKey && e.shiftKey && e.key === 'K') { e.preventDefault(); return false; }
+            });
+            // Проверка целостности localStorage
+            const keys = ['neobank_final_v9', 'neobank_cards_v9', 'neobank_balances_v9', 'neobank_transactions_v9', 'neobank_clicker_earned', 'neobank_user_settings', 'neobank_inventory', 'neobank_greed_counter'];
+            function getChecksum() {
+                let checksum = '';
+                for (let key of keys) {
+                    const val = localStorage.getItem(key);
+                    checksum += (val ? val.length : 0) + '|';
+                }
+                return checksum;
+            }
+            function checkIntegrity() {
+                const stored = localStorage.getItem('integrity_checksum');
+                const current = getChecksum();
+                if (stored && stored !== current) {
+                    localStorage.setItem('cheat_detected', 'true');
+                    return false;
+                }
+                localStorage.setItem('integrity_checksum', current);
+                return true;
+            }
+            const originalSetItem = localStorage.setItem;
+            localStorage.setItem = function(key, value) {
+                originalSetItem.apply(this, arguments);
+                if (keys.includes(key)) setTimeout(() => checkIntegrity(), 10);
+            };
+            if (localStorage.getItem('cheat_detected') === 'true') {
+                alert('Обнаружены подозрительные изменения. Прогресс сброшен.');
+                localStorage.clear();
+                location.reload();
+            }
+            checkIntegrity();
+        })();
+    </script>
+    
+    <style>
+        /* ========== ВСЕ СТИЛИ (ТЕ ЖЕ, ЧТО В ТВОЁМ ФАЙЛЕ) ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Poppins', sans-serif;
+        }
+
+        :root {
+            --bg-gradient-start: #0A0F1C;
+            --bg-gradient-end: #03050B;
+            --glass-bg: rgba(8, 12, 22, 0.85);
+            --glass-border: rgba(66, 153, 255, 0.3);
+            --card-front-start: #121C33;
+            --card-front-end: #070E1E;
+            --card-back-start: #0F182C;
+            --card-back-end: #070C1A;
+            --text-primary: #F0F4FF;
+            --text-secondary: #B6C9FF;
+            --accent: #2D7AFF;
+            --accent-glow: rgba(0, 100, 255, 0.3);
+            --widget-bg: linear-gradient(95deg, #0F1A35, #0A1025);
+            --input-bg: rgba(3, 7, 18, 0.7);
+            --input-border: #2A3D6A;
+            --button-gradient: linear-gradient(95deg, #1A6AFF, #0043C7);
+            --clicker-bg: linear-gradient(145deg, #0F1A35, #0A1025);
+            --demo-text: #6A80AA;
+        }
+
+        body.theme-dark-yellow {
+            --bg-gradient-start: #0A0A0A;
+            --bg-gradient-end: #000000;
+            --glass-bg: rgba(0, 0, 0, 0.85);
+            --glass-border: rgba(255, 200, 0, 0.4);
+            --card-front-start: #1A1A1A;
+            --card-front-end: #0A0A0A;
+            --card-back-start: #111111;
+            --card-back-end: #050505;
+            --text-primary: #FFE484;
+            --text-secondary: #FFD966;
+            --accent: #FFC107;
+            --accent-glow: rgba(255, 193, 7, 0.4);
+            --widget-bg: linear-gradient(95deg, #1A1A1A, #0A0A0A);
+            --input-bg: rgba(20, 20, 20, 0.9);
+            --input-border: #FFC107;
+            --button-gradient: linear-gradient(95deg, #FFC107, #D4A000);
+            --clicker-bg: linear-gradient(145deg, #1A1A1A, #0A0A0A);
+            --demo-text: #B8860B;
+        }
+
+        body.theme-white {
+            --bg-gradient-start: #E8EEF5;
+            --bg-gradient-end: #D0D8E8;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 0, 0, 0.2);
+            --card-front-start: #FFFFFF;
+            --card-front-end: #F0F4FF;
+            --card-back-start: #E8ECF4;
+            --card-back-end: #DDE2F0;
+            --text-primary: #1A2A4F;
+            --text-secondary: #3A5A8C;
+            --accent: #0066CC;
+            --accent-glow: rgba(0, 102, 204, 0.2);
+            --widget-bg: linear-gradient(95deg, #FFFFFF, #F0F4FA);
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --input-border: #AAC0E0;
+            --button-gradient: linear-gradient(95deg, #0066CC, #004499);
+            --clicker-bg: linear-gradient(145deg, #FFFFFF, #F0F4FA);
+            --demo-text: #4A6A9A;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(ellipse at 40% 30%, var(--bg-gradient-start), var(--bg-gradient-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.3s ease;
+        }
+
+        body::before { content: "⟁ NEOBANK"; position: fixed; bottom: 3%; right: 2%; font-size: 6rem; font-weight: 800; color: rgba(255,255,255,0.02); pointer-events: none; z-index: -1; white-space: nowrap; font-family: monospace; transform: rotate(-5deg); letter-spacing: 5px; }
+        body::after { content: "⟁ NEOBANK"; position: fixed; top: 10%; left: -5%; font-size: 8rem; font-weight: 800; color: rgba(255,255,255,0.02); pointer-events: none; z-index: -1; white-space: nowrap; font-family: monospace; transform: rotate(15deg); letter-spacing: 8px; }
+        .bg-text-1 { position: fixed; bottom: 20%; left: 5%; font-size: 4rem; font-weight: 800; color: rgba(255,255,255,0.015); pointer-events: none; z-index: -1; font-family: monospace; transform: rotate(-10deg); letter-spacing: 4px; }
+        .bg-text-2 { position: fixed; top: 40%; right: 0%; font-size: 5rem; font-weight: 800; color: rgba(255,255,255,0.015); pointer-events: none; z-index: -1; font-family: monospace; transform: rotate(25deg); letter-spacing: 6px; }
+        .bg-text-3 { position: fixed; top: 70%; left: -3%; font-size: 7rem; font-weight: 800; color: rgba(255,255,255,0.01); pointer-events: none; z-index: -1; font-family: monospace; transform: rotate(-20deg); letter-spacing: 10px; }
+        .glow-bg { position: fixed; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(0, 110, 255, 0.15), transparent); border-radius: 50%; filter: blur(90px); z-index: -1; top: -20%; right: -20%; }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border-radius: 2rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+            width: 100%;
+            max-width: 580px;
+            padding: 1.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .brand { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-bottom: 1.5rem; position: relative; }
+        .settings-icon { position: absolute; right: 0; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.4rem; background: rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .settings-icon:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.05); }
+        .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #003EAA); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 0 5px 15px var(--accent-glow); }
+        .brand h1 { font-size: 1.7rem; font-weight: 600; background: linear-gradient(135deg, #FFFFFF, var(--text-secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 2rem;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            color: var(--text-primary);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 {
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .modal-content .setting-item {
+            margin: 1rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-content select, .modal-content input {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 2rem;
+            padding: 0.4rem 0.8rem;
+            color: var(--text-primary);
+            outline: none;
+        }
+        .modal-content button {
+            background: var(--button-gradient);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.5rem 1rem;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        .close-modal {
+            margin-top: 1rem;
+            background: rgba(255,100,100,0.3);
+        }
+        .chance-table {
+            width: 100%;
+            font-size: 0.7rem;
+            border-collapse: collapse;
+            margin-top: 0.5rem;
+        }
+        .chance-table th, .chance-table td {
+            border-bottom: 1px solid var(--input-border);
+            padding: 0.3rem;
+            text-align: left;
+        }
+        .chance-table th { color: #FFD966; }
+
+        .tab-btn, .action-btn, .transfer-row button, .dash-tab, .settings-icon, .clicker-area, .open-case-btn, .sell-btn, .sell-all-btn, .info-btn, .history-more, .upgrade-btn, .multiplier-btn {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .tab-btn:hover, .action-btn:hover, .transfer-row button:hover, .dash-tab:hover, .settings-icon:hover, .clicker-area:hover, .open-case-btn:hover, .sell-btn:hover, .sell-all-btn:hover, .info-btn:hover, .history-more:hover, .upgrade-btn:hover, .multiplier-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        .clicker-area:active { transform: scale(0.98); }
+
+        .auth-tabs { display: flex; gap: 1rem; background: rgba(0, 0, 0, 0.5); border-radius: 3rem; padding: 0.4rem; margin-bottom: 2rem; border: 1px solid rgba(72, 150, 255, 0.3); }
+        .tab-btn { flex: 1; background: transparent; border: none; padding: 0.7rem 0; border-radius: 2.5rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; color: #9AABD0; transition: 0.2s; }
+        .tab-btn.active { background: #102A4F; color: white; box-shadow: 0 2px 12px var(--accent-glow); }
+
+        .dashboard-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 3rem;
+            padding: 0.3rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid rgba(72, 150, 255, 0.2);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .dash-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 0.5rem 0;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            color: #9AABD0;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .dash-tab.active {
+            background: #102A4F;
+            color: white;
+            box-shadow: 0 2px 8px var(--accent-glow);
+        }
+        .dashboard-content { transition: all 0.2s; }
+        .dashboard-content.hidden { display: none; }
+
+        /* Кейсы */
+        .case-card {
+            background: var(--widget-bg);
+            border-radius: 1.2rem;
+            padding: 0.8rem;
+            margin: 0.8rem 0;
+            border: 1px solid var(--input-border);
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .case-info { flex: 3; }
+        .case-price { font-size: 1.2rem; font-weight: bold; color: #FFD966; }
+        .case-desc { font-size: 0.7rem; color: var(--text-secondary); }
+        .case-buttons { display: flex; gap: 0.5rem; align-items: center; }
+        .open-case-btn, .info-btn {
+            background: var(--accent);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.4rem 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 0.75rem;
+        }
+        .info-btn { background: rgba(255,255,255,0.2); }
+        .inventory-btn { background: var(--button-gradient); margin-bottom: 1rem; width: 100%; }
+
+        /* Апгрейд */
+        .upgrade-card {
+            background: var(--widget-bg);
+            border-radius: 1.2rem;
+            padding: 1rem;
+            margin: 0.8rem 0;
+            border: 1px solid var(--input-border);
+        }
+        .upgrade-card strong {
+            color: #FFD966;
+            font-size: 1.1rem;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        .multiplier-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+            justify-content: center;
+        }
+        .multiplier-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--accent);
+            border-radius: 2rem;
+            padding: 0.4rem 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+        .multiplier-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .bet-input {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            align-items: center;
+        }
+        .bet-input input {
+            flex: 2;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 2rem;
+            padding: 0.7rem 1rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .bet-input input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        .upgrade-btn {
+            background: var(--button-gradient);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.7rem 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px var(--accent-glow);
+        }
+
+        /* Анимация кейса */
+        .case-animation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            animation: fadeIn 0.3s;
+        }
+        .case-animation-box {
+            background: var(--glass-bg);
+            border-radius: 2rem;
+            padding: 2rem;
+            text-align: center;
+            border: 2px solid var(--accent);
+            width: 80%;
+            max-width: 350px;
+            transition: background 0.3s;
+        }
+        .slot-machine {
+            font-size: 4rem;
+            animation: spin 0.5s ease-out;
+        }
+        @keyframes spin {
+            0% { transform: scale(1) rotate(0deg); opacity: 1; }
+            50% { transform: scale(1.5) rotate(20deg); opacity: 0.5; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .prize-name { font-size: 1.5rem; font-weight: bold; margin: 1rem 0; color: #FFD966; }
+        .prize-value { font-size: 1.2rem; color: var(--text-primary); }
+
+        /* Цвета редкости */
+        .rarity-gray { background: #3a3f4b; }
+        .rarity-blue { background: #2c5282; }
+        .rarity-purple { background: #6b46c1; }
+        .rarity-pink { background: #c5309c; }
+        .rarity-red { background: #c53030; }
+        .rarity-gold { background: #b68b40; }
+
+        .inventory-modal { background: var(--glass-bg); border-radius: 1.5rem; padding: 1rem; max-height: 400px; overflow-y: auto; }
+        .inventory-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--input-border); padding: 0.5rem; font-size: 0.8rem; gap: 0.5rem; flex-wrap: wrap; }
+        .sell-btn { background: #28a745; border: none; border-radius: 2rem; padding: 0.2rem 0.6rem; color: white; cursor: pointer; font-size: 0.7rem; }
+        .sell-all-btn { background: #dc3545; margin-top: 0.5rem; }
+        .inventory-total { text-align: right; font-weight: bold; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--input-border); }
+
+        .clicker-area { background: var(--clicker-bg); border-radius: 1.5rem; padding: 1.2rem; text-align: center; cursor: pointer; user-select: none; border: 1px solid var(--input-border); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .clicker-coin { font-size: 4rem; display: inline-block; animation: float 2s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
+        .clicker-main-text { font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 8px rgba(255,200,0,0.5); margin-top: 0.5rem; }
+        .clicker-sub-text { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; }
+        .clicker-stats { display: flex; justify-content: space-between; margin-top: 1rem; gap: 1rem; }
+        .stat-card { background: rgba(0,0,0,0.4); border-radius: 1rem; padding: 0.5rem; flex: 1; text-align: center; }
+        .stat-label { font-size: 0.6rem; color: #8AA5D0; }
+        .stat-value { font-size: 1.2rem; font-weight: bold; color: #FFD966; }
+
+        .input-group { margin-bottom: 1.3rem; }
+        .input-group label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.4rem; }
+        .input-field { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 1.2rem; padding: 0.85rem 1.2rem; font-size: 0.95rem; color: var(--text-primary); outline: none; }
+        .action-btn { width: 100%; background: var(--button-gradient); border: none; border-radius: 2rem; padding: 0.85rem; font-weight: 700; font-size: 1rem; color: white; cursor: pointer; margin-top: 0.5rem; box-shadow: 0 6px 14px var(--accent-glow); }
+        .message-area { margin-top: 1rem; font-size: 0.75rem; text-align: center; background: rgba(0,0,0,0.5); padding: 0.6rem; border-radius: 1.2rem; color: var(--text-secondary); }
+        .hidden { display: none; }
+
+        .card-stage { display: flex; justify-content: center; align-items: center; margin: 0.5rem 0 1rem 0; height: 210px; position: relative; z-index: 5; }
+        .card-scene { width: 100%; max-width: 420px; height: 210px; perspective: 1200px; }
+        .card-flipper { position: relative; width: 100%; height: 100%; transition: transform 0.5s ease-in-out; transform-style: preserve-3d; cursor: pointer; }
+        .card-flipper.flipped { transform: rotateY(180deg); }
+        .card-front-face, .card-back-face { position: absolute; width: 100%; height: 100%; top: 0; left: 0; backface-visibility: hidden; border-radius: 1rem; padding: 0.9rem; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 20px 30px -10px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.12) inset; }
+        .card-front-face { background: linear-gradient(145deg, var(--card-front-start), var(--card-front-end)); border: 1px solid var(--glass-border); transform: rotateY(0deg); position: relative; overflow: hidden; }
+        .card-front-face .holo-stripe { position: absolute; top: -10%; right: -20%; width: 40%; height: 120%; background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.15) 25%, rgba(200,220,255,0.25) 50%, rgba(255,255,255,0.15) 75%, transparent 100%); transform: rotate(25deg); pointer-events: none; z-index: 1; }
+        .card-front-face::before { content: ""; position: absolute; top: 0; left: -30%; width: 80%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), rgba(200,220,255,0.08), transparent); transform: skewX(-15deg); pointer-events: none; z-index: 1; }
+        .card-back-face { background: linear-gradient(145deg, var(--card-back-start), var(--card-back-end)); transform: rotateY(180deg); border: 1px solid var(--glass-border); }
+        .brand-group { display: flex; flex-direction: column; gap: 0.2rem; }
+        .card-chip-area { display: flex; align-items: center; gap: 0.6rem; z-index: 3; position: relative; }
+        .chip-sim { background: linear-gradient(145deg, #E8C87A, #C89F3A); width: 42px; height: 32px; border-radius: 8px; position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.4); }
+        .chip-sim:after { content: "◉◉"; position: absolute; top: 6px; left: 9px; font-size: 10px; color: #2A1F0C; letter-spacing: 3px; }
+        .card-brand { font-weight: 800; letter-spacing: 2px; background: linear-gradient(120deg, #FFF, #9EC8FF); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 0.9rem; }
+        .platinum-badge { font-size: 0.55rem; font-weight: 700; color: rgba(220,240,255,0.7); background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 20px; backdrop-filter: blur(2px); display: inline-block; width: fit-content; margin-left: 48px; font-family: monospace; }
+        .card-number { font-family: monospace; font-size: 1rem; letter-spacing: 2px; color: var(--text-primary); margin: 0.2rem 0; z-index: 3; position: relative; }
+        .card-details { display: flex; justify-content: space-between; font-size: 0.55rem; color: var(--text-secondary); z-index: 3; position: relative; }
+        .card-details span { display: block; font-size: 0.45rem; color: #8DA0D0; }
+        .flip-icon { position: absolute; bottom: 8px; right: 12px; background: rgba(0,0,0,0.5); border-radius: 20px; padding: 2px 8px; font-size: 0.5rem; color: #CCC; backdrop-filter: blur(2px); pointer-events: none; }
+        .black-strip { background: #03060C; width: 100%; height: 35px; margin-top: 0.3rem; }
+        .cvv-box { display: flex; justify-content: flex-end; padding: 0 0.5rem; gap: 8px; align-items: center; margin-top: 8px; }
+        .cvv-label { font-size: 0.55rem; color: #8AA5D0; text-transform: uppercase; }
+        .cvv-field { background: #EFF3F8; color: #111; padding: 4px 10px; border-radius: 6px; font-family: monospace; font-weight: bold; font-size: 0.9rem; letter-spacing: 2px; }
+        .back-footer-text { font-size: 0.45rem; color: #5A72A0; text-align: center; margin-top: auto; margin-bottom: 0.5rem; }
+        .back-micro { font-size: 0.4rem; color: #4A6085; text-align: center; margin-bottom: 0.5rem; }
+
+        .balance-widget { background: var(--widget-bg); border-radius: 1.2rem; padding: 0.8rem 1.2rem; margin: 1rem 0 0.8rem 0; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--input-border); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        .balance-label-main { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: #8AA5D0; }
+        .balance-amount-main { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+
+        .transfer-section { background: rgba(0,0,0,0.45); border-radius: 1.2rem; padding: 0.8rem; margin: 0.8rem 0; color: var(--text-secondary); }
+        .transfer-section strong { color: var(--text-primary); }
+        .transfer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .history-more { background: rgba(255,255,255,0.15); border: none; border-radius: 2rem; padding: 0.2rem 0.6rem; font-size: 0.65rem; cursor: pointer; color: var(--text-secondary); }
+        .transfer-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .transfer-row input { flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 2rem; padding: 0.5rem 0.9rem; color: var(--text-primary); font-size: 0.75rem; }
+        .transfer-row button { background: var(--accent); border: none; border-radius: 2rem; padding: 0.5rem 1rem; font-weight: bold; cursor: pointer; color: white; font-size: 0.75rem; }
+        .tx-list { max-height: 170px; overflow-y: auto; margin-top: 0.5rem; }
+        .tx-item { background: rgba(255,255,255,0.08); border-radius: 0.9rem; padding: 0.5rem; margin: 0.3rem 0; font-size: 0.65rem; display: flex; justify-content: space-between; color: var(--text-secondary); align-items: center; }
+        .dashboard-user { display: flex; justify-content: flex-start; margin-bottom: 0.5rem; }
+        .nick-badge { background: #0D1F40; padding: 0.2rem 0.9rem; border-radius: 2rem; font-size: 0.75rem; color: #C4DEFF; }
+        .demo-hint { font-size: 0.55rem; text-align: center; color: var(--demo-text); margin-top: 0.8rem; border-top: 1px solid var(--input-border); padding-top: 0.8rem; }
+        #transferStatus { font-size: 0.65rem; margin-top: 6px; color: #B8D0FF; }
+
+        /* Анимация апгрейда (мигающие круги) */
+        .upgrade-animation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .dual-circles {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: all 0.1s ease;
+        }
+        .circle-green {
+            background-color: #2ecc71;
+            box-shadow: 0 0 0 rgba(46,204,113,0);
+        }
+        .circle-red {
+            background-color: #e74c3c;
+            box-shadow: 0 0 0 rgba(231,76,60,0);
+        }
+        .blink-green {
+            animation: blinkGreen 0.15s linear;
+        }
+        .blink-red {
+            animation: blinkRed 0.15s linear;
+        }
+        @keyframes blinkGreen {
+            0% { box-shadow: 0 0 0 rgba(46,204,113,0); }
+            50% { box-shadow: 0 0 30px #2ecc71, 0 0 10px #2ecc71; background-color: #6feb9e; }
+            100% { box-shadow: 0 0 0 rgba(46,204,113,0); }
+        }
+        @keyframes blinkRed {
+            0% { box-shadow: 0 0 0 rgba(231,76,60,0); }
+            50% { box-shadow: 0 0 30px #e74c3c, 0 0 10px #e74c3c; background-color: #f07c6e; }
+            100% { box-shadow: 0 0 0 rgba(231,76,60,0); }
+        }
+        .final-win {
+            animation: finalGlowWin 0.5s ease-out forwards;
+        }
+        .final-lose {
+            animation: finalGlowLose 0.5s ease-out forwards;
+        }
+        @keyframes finalGlowWin {
+            0% { box-shadow: 0 0 10px #2ecc71; background-color: #2ecc71; }
+            100% { box-shadow: 0 0 40px #2ecc71, 0 0 20px #2ecc71; background-color: #2ecc71; }
+        }
+        @keyframes finalGlowLose {
+            0% { box-shadow: 0 0 10px #e74c3c; background-color: #e74c3c; }
+            100% { box-shadow: 0 0 40px #e74c3c, 0 0 20px #e74c3c; background-color: #e74c3c; }
+        }
+        .upgrade-result-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="bg-text-1">⟁ NEOBANK</div>
+<div class="bg-text-2">⟁ NEOBANK</div>
+<div class="bg-text-3">⟁ NEOBANK</div>
+<div class="glow-bg"></div>
+<div id="appContainer"></div>
+
+<script>
+    // ========== ПОЛНАЯ ОЧИСТКА ВСЕХ ДАННЫХ (удаление старых аккаунтов) ==========
+    (function cleanupOldData() {
+        const keys = [
+            'neobank_final_v9', 'neobank_cards_v9', 'neobank_balances_v9',
+            'neobank_transactions_v9', 'neobank_clicker_earned', 'neobank_user_settings',
+            'neobank_inventory', 'neobank_greed_counter'
+        ];
+        for (let key of keys) localStorage.removeItem(key);
+        sessionStorage.removeItem('bank_session');
+        console.log('Все старые аккаунты и данные удалены.');
+    })();
+
+    const KEY_USERS = 'neobank_final_v9';
+    const KEY_CARDS = 'neobank_cards_v9';
+    const KEY_BALANCES = 'neobank_balances_v9';
+    const KEY_TXS = 'neobank_transactions_v9';
+    const KEY_CLICKER_EARNED = 'neobank_clicker_earned';
+    const KEY_USER_SETTINGS = 'neobank_user_settings';
+    const KEY_INVENTORY = 'neobank_inventory';
+    const KEY_GREED = 'neobank_greed_counter';
+
+    let audioCtx = null;
+    let currentVolume = 0.08;
+    let modalElement = null;
+
+    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    function playClickSound() { try { initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 880; gain.gain.value = currentVolume; osc.type = 'sine'; osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.25); osc.stop(audioCtx.currentTime + 0.2); audioCtx.resume(); } catch(e) {} }
+    function playSpinSound() { try { initAudio(); const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(400, now); osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3); gain.gain.setValueAtTime(currentVolume * 0.3, now); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35); osc.start(); osc.stop(now + 0.35); audioCtx.resume(); } catch(e) {} }
+    function playTickSound() { try { initAudio(); const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.type = 'sine'; osc.frequency.value = 1200; gain.gain.value = currentVolume * 0.2; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1); osc.stop(now + 0.1); audioCtx.resume(); } catch(e) {} }
+    function playWinSound() { try { initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 1046; gain.gain.value = currentVolume * 0.5; osc.type = 'sine'; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3); osc.stop(audioCtx.currentTime + 0.3); audioCtx.resume(); } catch(e) {} }
+    function playLoseSound() { try { initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 220; gain.gain.value = currentVolume * 0.4; osc.type = 'sawtooth'; osc.start(); gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.3); osc.stop(audioCtx.currentTime + 0.3); audioCtx.resume(); } catch(e) {} }
+    function playRaritySound(rarityClass) { try { initAudio(); const now = audioCtx.currentTime; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); let freq = 440; let harmonic = false; switch(rarityClass) { case 'rarity-gray': freq = 440; break; case 'rarity-blue': freq = 587; break; case 'rarity-purple': freq = 698; break; case 'rarity-pink': freq = 784; harmonic = true; break; case 'rarity-red': freq = 1046; harmonic = true; break; case 'rarity-gold': freq = 1318; harmonic = true; break; default: freq = 440; } osc.frequency.value = freq; if (harmonic) { const osc2 = audioCtx.createOscillator(); const gain2 = audioCtx.createGain(); osc2.connect(gain2); gain2.connect(audioCtx.destination); osc2.frequency.value = freq * 1.5; gain2.gain.value = currentVolume * 0.3; gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc2.start(); osc2.stop(now + 0.3); } gain.gain.value = currentVolume * 0.4; gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3); osc.start(); osc.stop(now + 0.3); audioCtx.resume(); } catch(e) {} }
+
+    function setVolume(value) { currentVolume = Math.max(0, Math.min(1, value)); }
+    function saveSettings(nick, theme, volume) { const s = JSON.parse(localStorage.getItem(KEY_USER_SETTINGS) || '{}'); s[nick] = { theme, volume }; localStorage.setItem(KEY_USER_SETTINGS, JSON.stringify(s)); }
+    function loadSettings(nick) { const s = JSON.parse(localStorage.getItem(KEY_USER_SETTINGS) || '{}'); return s[nick] || { theme: 'default', volume: 0.08 }; }
+    function applyTheme(theme) { document.body.classList.remove('theme-dark-yellow', 'theme-white'); if (theme === 'dark-yellow') document.body.classList.add('theme-dark-yellow'); else if (theme === 'white') document.body.classList.add('theme-white'); }
+
+    function generateCardNumber() { const g1=Math.floor(Math.random()*10000).toString().padStart(4,'0'); const g2=Math.floor(Math.random()*10000).toString().padStart(4,'0'); const g3=Math.floor(Math.random()*10000).toString().padStart(4,'0'); const g4=Math.floor(Math.random()*10000).toString().padStart(4,'0'); return `${g1} ${g2} ${g3} ${g4}`; }
+    function generateCVV() { return Math.floor(100+Math.random()*900).toString(); }
+    function getExpiry() { const d=new Date(); return `${(d.getMonth()+1).toString().padStart(2,'0')}/${(d.getFullYear()+4).toString().slice(-2)}`; }
+
+    function getUsers() { return JSON.parse(localStorage.getItem(KEY_USERS)||'[]'); }
+    function saveUsers(u) { localStorage.setItem(KEY_USERS,JSON.stringify(u)); }
+    function getCards() { return JSON.parse(localStorage.getItem(KEY_CARDS)||'{}'); }
+    function saveCards(c) { localStorage.setItem(KEY_CARDS,JSON.stringify(c)); }
+    function getBalances() { return JSON.parse(localStorage.getItem(KEY_BALANCES)||'{}'); }
+    function saveBalances(b) { localStorage.setItem(KEY_BALANCES,JSON.stringify(b)); }
+    function getTransactions() { return JSON.parse(localStorage.getItem(KEY_TXS)||'{}'); }
+    function saveTransactions(t) { localStorage.setItem(KEY_TXS,JSON.stringify(t)); }
+    function getClickerEarned(nick) { const e=JSON.parse(localStorage.getItem(KEY_CLICKER_EARNED)||'{}'); return e[nick]||0; }
+    function setClickerEarned(nick, val) { const e=JSON.parse(localStorage.getItem(KEY_CLICKER_EARNED)||'{}'); e[nick]=val; localStorage.setItem(KEY_CLICKER_EARNED,JSON.stringify(e)); }
+    function addClickerEarned(nick, amt) { setClickerEarned(nick, getClickerEarned(nick)+amt); }
+    function getInventory(nick) { const inv = JSON.parse(localStorage.getItem(KEY_INVENTORY) || '{}'); return inv[nick] || []; }
+    function saveInventory(nick, inv) { const all = JSON.parse(localStorage.getItem(KEY_INVENTORY) || '{}'); all[nick] = inv; localStorage.setItem(KEY_INVENTORY, JSON.stringify(all)); }
+    function addToInventory(nick, item) { const inv = getInventory(nick); inv.push({ ...item, date: new Date().toLocaleString() }); saveInventory(nick, inv); }
+    function removeFromInventory(nick, index) { const inv = getInventory(nick); inv.splice(index, 1); saveInventory(nick, inv); }
+
+    function getGreedCounter(nick) { const greed = JSON.parse(localStorage.getItem(KEY_GREED) || '{}'); return greed[nick] || 0; }
+    function setGreedCounter(nick, value) { const greed = JSON.parse(localStorage.getItem(KEY_GREED) || '{}'); greed[nick] = Math.max(0, value); localStorage.setItem(KEY_GREED, JSON.stringify(greed)); }
+    function addGreed(nick, amount) { setGreedCounter(nick, getGreedCounter(nick) + amount); }
+    function decreaseGreed(nick) { let current = getGreedCounter(nick); if (current > 0) setGreedCounter(nick, current - 1); }
+
+    function addTransaction(nick, text, amount) { const txs = getTransactions(); if(!txs[nick]) txs[nick]=[]; txs[nick].unshift({ text, amount, date: new Date().toLocaleString(), id:Date.now() }); if(txs[nick].length>12) txs[nick].pop(); saveTransactions(txs); }
+    function getCardForUser(nick, fullname) { const cards = getCards(); if(cards[nick]) return cards[nick]; const newCard = { nick, holderName: fullname.toUpperCase(), cardNumber: generateCardNumber(), cvv: generateCVV(), expiry: getExpiry() }; cards[nick]=newCard; saveCards(cards); return newCard; }
+    function register(nick, fullname, pass) { if(!nick||nick.length<3) return {ok:false,msg:'Ник минимум 3 символа'}; if(!fullname||fullname.length<2) return {ok:false,msg:'Имя владельца'}; if(!pass||pass.length<4) return {ok:false,msg:'Пароль >=4 символов'}; const users=getUsers(); if(users.find(u=>u.nick===nick.toLowerCase())) return {ok:false,msg:'Ник занят'}; const newUser={id:Date.now(), nick:nick.toLowerCase(), fullname:fullname.trim(), pass, created:Date.now()}; users.push(newUser); saveUsers(users); getCardForUser(newUser.nick, newUser.fullname); const balances=getBalances(); if(!balances[newUser.nick]) balances[newUser.nick]=500; saveBalances(balances); addTransaction(newUser.nick,'🎉 Добро пожаловать! Бонус 500₽',500); return {ok:true,msg:'Регистрация успешна! Войдите.'}; }
+    function login(nick, pass) { const users=getUsers(); const u=users.find(u=>u.nick===nick.toLowerCase() && u.pass===pass); if(!u) return {ok:false,msg:'Неверный ник/пароль'}; sessionStorage.setItem('bank_session',JSON.stringify({nick:u.nick, fullname:u.fullname})); return {ok:true,msg:`Добро пожаловать, ${u.fullname.split(' ')[0]}`}; }
+    function getSession() { return JSON.parse(sessionStorage.getItem('bank_session')); }
+    function logout() { sessionStorage.removeItem('bank_session'); render(); }
+    function getBalance(nick) { return getBalances()[nick] || 0; }
+    
+    // ========== ИСПРАВЛЕННАЯ setBalance С СОХРАНЕНИЕМ РЕКОРДА ==========
+    function setBalance(nick, amount) {
+        let b = getBalances();
+        b[nick] = amount;
+        saveBalances(b);
+        // Сохраняем максимальный баланс в Supabase
+        let maxKey = `maxBalance_${nick}`;
+        let currentMax = parseFloat(localStorage.getItem(maxKey) || 0);
+        if (amount > currentMax) {
+            localStorage.setItem(maxKey, amount);
+            saveScoreToLeaderboard(nick, amount);
+        }
+    }
+    
+    function transfer(senderNick, toIdentifier, amount, comment) { if(amount<=0) return '❌ Сумма > 0'; const bal=getBalance(senderNick); if(bal<amount) return '❌ Недостаточно средств'; let receiverNick=null; const users=getUsers(); const cards=getCards(); if(users.find(u=>u.nick===toIdentifier.toLowerCase())) receiverNick=toIdentifier.toLowerCase(); else { const cleanNum=toIdentifier.replace(/\s/g,''); for(let [nick,card] of Object.entries(cards)) if(card.cardNumber.replace(/\s/g,'')===cleanNum) { receiverNick=nick; break; } } if(!receiverNick) return '❌ Получатель не найден (ник или номер карты)'; if(receiverNick===senderNick) return '❌ Нельзя перевести себе'; setBalance(senderNick, bal-amount); setBalance(receiverNick, getBalance(receiverNick)+amount); addTransaction(senderNick, `💸 Перевод ${amount}₽ → ${receiverNick} ${comment?`(${comment})`:''}`, -amount); addTransaction(receiverNick, `💰 Получено ${amount}₽ от ${senderNick} ${comment?`(${comment})`:''}`, +amount); return `✅ Переведено ${amount}₽ пользователю ${receiverNick}`; }
+
+    let sessionClickCount = 0;
+    function updateTransactionsUI(nick) { const txs = getTransactions()[nick] || []; const txListDiv = document.getElementById('txList'); if(txListDiv) { if(txs.length===0) txListDiv.innerHTML = '<div class="tx-item">Нет операций</div>'; else txListDiv.innerHTML = txs.slice(0,7).map(t=>`<div class="tx-item"><span>${t.text}</span><span style="color:${t.amount>0?'#7AFF8A':'#FF9F7A'}">${t.amount>0?'+':''}${t.amount}₽</span><span>${t.date}</span></div>`).join(''); } }
+    function addClickMoney(nick, updateUI = true) { const bal = getBalance(nick); setBalance(nick, bal+1); addClickerEarned(nick, 1); playClickSound(); sessionClickCount++; addTransaction(nick, `🖱️ Кликер +1₽`, +1); if(updateUI) { const bd=document.getElementById('mainBalanceDisplay'); if(bd) bd.innerHTML = (bal+1).toLocaleString('ru-RU')+'<small> ₽</small>'; const cc=document.getElementById('clickerCount'); if(cc) cc.innerText = sessionClickCount; const ct=document.getElementById('clickerTotalEarned'); if(ct) ct.innerText = getClickerEarned(nick).toLocaleString('ru-RU'); updateTransactionsUI(nick); } }
+
+    // Кейсы (оставляем без изменений, они используют setBalance)
+    const CASES = {
+        basic: { name: 'Базовый кейс', price: 500, items: [
+            { name: 'Офисная мышь', value: 300, weight: 20, bad: true },
+            { name: 'Клавиатура Defender', value: 450, weight: 15, bad: true },
+            { name: 'Денежный приз 100₽', value: 100, weight: 20, bad: true, isMoney: true },
+            { name: 'Денежный приз 500₽', value: 500, weight: 20, good: true, isMoney: true },
+            { name: '✨ Золотая монета', value: 2500, weight: 10, rare: true },
+            { name: '✨ Антикварные часы', value: 2000, weight: 10, rare: true },
+            { name: '💎 СУПЕР-РЕДКИЙ АЛМАЗ', value: 50000, weight: 0.5, super: true }
+        ]},
+        advanced: { name: 'Продвинутый кейс', price: 5000, items: [
+            { name: 'Игровая мышь A4Tech', value: 1800, weight: 20, bad: true },
+            { name: 'Наушники HyperX', value: 3500, weight: 15, bad: true },
+            { name: 'Веб-камера Logitech', value: 4200, weight: 15, bad: true },
+            { name: 'Денежный приз 1000₽', value: 1000, weight: 15, bad: true, isMoney: true },
+            { name: 'Денежный приз 3000₽', value: 3000, weight: 15, bad: true, isMoney: true },
+            { name: 'Денежный приз 5000₽', value: 5000, weight: 15, good: true, isMoney: true },
+            { name: '✨ Серебряный слиток', value: 20000, weight: 8, rare: true },
+            { name: '✨ Старинная монета', value: 22000, weight: 7, rare: true },
+            { name: '💎 СУПЕР-РЕДКИЙ АЛМАЗ', value: 50000, weight: 0.5, super: true }
+        ]},
+        premium: { name: 'Премиум кейс', price: 25000, items: [
+            { name: 'Монитор 24" 75Hz', value: 12000, weight: 20, bad: true },
+            { name: 'Игровая мышь Razer', value: 8500, weight: 15, bad: true },
+            { name: 'Механическая клавиатура', value: 9500, weight: 15, bad: true },
+            { name: 'Денежный приз 5000₽', value: 5000, weight: 12, bad: true, isMoney: true },
+            { name: 'Денежный приз 10000₽', value: 10000, weight: 12, bad: true, isMoney: true },
+            { name: 'Денежный приз 25000₽', value: 25000, weight: 12, good: true, isMoney: true },
+            { name: '✨ Золотой слиток 50g', value: 100000, weight: 8, rare: true },
+            { name: '✨ Картина Пикассо (репродукция)', value: 120000, weight: 7, rare: true },
+            { name: '💎 СУПЕР-РЕДКИЙ АЛМАЗ', value: 500000, weight: 0.4, super: true }
+        ]},
+        legendary: { name: 'Легендарный кейс', price: 100000, items: [
+            { name: 'Игровой монитор 240Hz', value: 45000, weight: 20, bad: true },
+            { name: 'Видеокарта RTX 4070', value: 85000, weight: 15, bad: true },
+            { name: 'Игровое кресло', value: 55000, weight: 15, bad: true },
+            { name: 'Денежный приз 25000₽', value: 25000, weight: 12, bad: true, isMoney: true },
+            { name: 'Денежный приз 50000₽', value: 50000, weight: 12, bad: true, isMoney: true },
+            { name: 'Денежный приз 100000₽', value: 100000, weight: 12, good: true, isMoney: true },
+            { name: '✨ Бриллиант 1 карат', value: 450000, weight: 8, rare: true },
+            { name: '✨ Эксклюзивные часы Rolex', value: 500000, weight: 7, rare: true },
+            { name: '💎 СУПЕР-РЕДКИЙ АЛМАЗ', value: 2000000, weight: 0.3, super: true }
+        ]}
+    };
+
+    function getRarityClass(value, casePrice) { const ratio = value / casePrice; if (ratio < 0.5) return 'rarity-gray'; if (ratio < 0.8) return 'rarity-blue'; if (ratio < 1.2) return 'rarity-purple'; if (ratio < 2.0) return 'rarity-pink'; if (ratio < 4.0) return 'rarity-red'; return 'rarity-gold'; }
+
+    function showCaseAnimation(nick, itemName, itemValue, casePrice, isMoney, callback) {
+        const overlay = document.createElement('div');
+        overlay.className = 'case-animation-overlay';
+        const rarityClass = isMoney ? 'rarity-gold' : getRarityClass(itemValue, casePrice);
+        overlay.innerHTML = `<div class="case-animation-box ${rarityClass}"><div class="slot-machine" id="slotMachine">🎲</div><div id="prizeDisplay" style="display: none;"><div class="prize-name">${isMoney ? 'ДЕНЬГИ' : 'ПРЕДМЕТ'}</div><div class="prize-value">${itemName}</div><div class="prize-value" style="margin-top:0.5rem;">стоимость: ${itemValue}₽</div></div><button class="close-modal" id="closeAnimBtn" style="margin-top:1rem; display: none;">Закрыть</button></div>`;
+        document.body.appendChild(overlay);
+        const slot = overlay.querySelector('#slotMachine');
+        const prizeDiv = overlay.querySelector('#prizeDisplay');
+        const closeBtn = overlay.querySelector('#closeAnimBtn');
+        playSpinSound();
+        let spins = 0;
+        const spinInterval = setInterval(() => {
+            slot.innerText = ['🎲', '🎰', '💎', '💰', '🎁'][Math.floor(Math.random()*5)];
+            spins++;
+            if (spins > 12) {
+                clearInterval(spinInterval);
+                slot.style.display = 'none';
+                prizeDiv.style.display = 'block';
+                closeBtn.style.display = 'block';
+                playRaritySound(rarityClass);
+                if (callback) callback();
+            }
+        }, 65);
+        closeBtn.onclick = () => { overlay.remove(); };
+        setTimeout(() => { if (overlay) overlay.remove(); }, 5000);
+    }
+
+    function confirmOpenCase(nick, caseKey, caseData, onConfirm) {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal active';
+        modalDiv.style.display = 'flex';
+        modalDiv.innerHTML = `<div class="modal-content"><h3>🎲 Подтверждение</h3><p>Вы уверены, что хотите открыть <strong>${caseData.name}</strong> за ${caseData.price.toLocaleString('ru-RU')} ₽?</p><div class="setting-item"><button id="confirmBtn">✅ Да, открыть</button></div><div class="setting-item"><button id="cancelBtn" class="close-modal">❌ Отмена</button></div></div>`;
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelector('#confirmBtn').onclick = () => { modalDiv.remove(); onConfirm(); };
+        modalDiv.querySelector('#cancelBtn').onclick = () => modalDiv.remove();
+    }
+
+    function showCaseInfo(caseData) {
+        const totalWeight = caseData.items.reduce((s,i)=>s+i.weight,0);
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal active';
+        modalDiv.style.display = 'flex';
+        let itemsHtml = `<table class="chance-table"><tr><th>Предмет</th><th>Стоимость (₽)</th><th>Шанс</th></tr>`;
+        for (let item of caseData.items) { let chance = (item.weight / totalWeight * 100).toFixed(2); itemsHtml += `<tr><td>${item.name}</td><td>${item.value.toLocaleString('ru-RU')}</td><td>${chance}%<\/td></tr>`; }
+        itemsHtml += `<\/table>`;
+        modalDiv.innerHTML = `<div class="modal-content" style="max-width: 500px;"><h3>📋 Содержимое кейса: ${caseData.name}</h3>${itemsHtml}<button class="close-modal">Закрыть</button></div>`;
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelector('.close-modal').onclick = () => modalDiv.remove();
+    }
+
+    function showFullHistory(nick) {
+        const txs = getTransactions()[nick] || [];
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal active';
+        modalDiv.style.display = 'flex';
+        let txsHtml = `<div class="inventory-modal">`;
+        if (txs.length === 0) txsHtml += '<p>Нет операций</p>';
+        else txs.forEach(t => { txsHtml += `<div class="inventory-item"><span style="flex:2;">${t.text}</span><span style="color:${t.amount>0?'#7AFF8A':'#FF9F7A'}; min-width:60px;">${t.amount>0?'+':''}${t.amount}₽</span><span style="font-size:0.6rem;">${t.date}</span></div>`; });
+        txsHtml += `</div>`;
+        modalDiv.innerHTML = `<div class="modal-content" style="max-width: 500px;"><h3>📋 Полная история операций</h3>${txsHtml}<button class="close-modal">Закрыть</button></div>`;
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelector('.close-modal').onclick = () => modalDiv.remove();
+    }
+
+    function executeOpenCase(nick, caseKey) {
+        const caseData = CASES[caseKey];
+        if (!caseData) return;
+        const balance = getBalance(nick);
+        if (balance < caseData.price) {
+            const errModal = document.createElement('div');
+            errModal.className = 'modal active';
+            errModal.style.display = 'flex';
+            errModal.innerHTML = `<div class="modal-content"><h3>❌ Ошибка</h3><p>Недостаточно средств! Нужно ${caseData.price.toLocaleString('ru-RU')} ₽</p><button class="close-modal">Закрыть</button></div>`;
+            document.body.appendChild(errModal);
+            errModal.querySelector('.close-modal').onclick = () => errModal.remove();
+            return;
+        }
+        setBalance(nick, balance - caseData.price);
+        addTransaction(nick, `🎁 Открытие "${caseData.name}" -${caseData.price}₽`, -caseData.price);
+        const balanceDisplay = document.getElementById('mainBalanceDisplay');
+        if(balanceDisplay) balanceDisplay.innerHTML = (balance - caseData.price).toLocaleString('ru-RU') + '<small> ₽</small>';
+        let greed = getGreedCounter(nick);
+        let itemsCopy = caseData.items.map(item => ({ ...item }));
+        if (greed > 0) {
+            itemsCopy.forEach(item => {
+                if (item.bad) item.weight += greed * 2;
+                else if (item.good) item.weight = Math.max(1, item.weight - greed);
+                else if (item.rare) item.weight = Math.max(1, item.weight - Math.floor(greed / 2));
+                else if (item.super) item.weight = Math.max(0, item.weight - greed);
+            });
+        }
+        let totalWeight = itemsCopy.reduce((s,i)=>s+i.weight,0);
+        let rand = Math.random() * totalWeight;
+        let selected = null;
+        let accum = 0;
+        for(let item of itemsCopy) { accum += item.weight; if(rand <= accum) { selected = { ...item }; break; } }
+        if(!selected) selected = itemsCopy[0];
+        let winAmount = 0, isMoney = false, itemName = selected.name, itemValue = selected.value;
+        if(selected.isMoney) { isMoney = true; winAmount = selected.value; }
+        else { addToInventory(nick, { name: selected.name, value: selected.value, fromCase: caseData.name }); }
+        showCaseAnimation(nick, itemName, itemValue, caseData.price, isMoney, () => {
+            if(isMoney) {
+                const newBal = getBalance(nick) + winAmount;
+                setBalance(nick, newBal);
+                addTransaction(nick, `🎉 Из кейса выпало ${winAmount}₽!`, winAmount);
+                if(balanceDisplay) balanceDisplay.innerHTML = newBal.toLocaleString('ru-RU') + '<small> ₽</small>';
+            }
+            updateTransactionsUI(nick);
+            const ct = document.getElementById('clickerTotalEarned');
+            if(ct) ct.innerText = getClickerEarned(nick).toLocaleString('ru-RU');
+        });
+        if (!isMoney && (selected.super || (selected.rare && itemValue > caseData.price * 3))) addGreed(nick, 3);
+        else if (!isMoney && (selected.rare && itemValue > caseData.price * 1.5)) addGreed(nick, 2);
+        else if (!isMoney && (selected.good || itemValue >= caseData.price)) addGreed(nick, 1);
+        else decreaseGreed(nick);
+        decreaseGreed(nick);
+    }
+
+    function openCaseWithConfirm(nick, caseKey) { const caseData = CASES[caseKey]; if (!caseData) return; confirmOpenCase(nick, caseKey, caseData, () => { executeOpenCase(nick, caseKey); }); }
+
+    // ========== АПГРЕЙД С МИГАЮЩИМИ КРУГАМИ ==========
+    let currentMultiplier = 2;
+
+    function getWinPercent(multiplier) {
+        switch(multiplier) {
+            case 1.5: return 75;
+            case 2: return 50;
+            case 3: return 33;
+            case 5: return 20;
+            case 10: return 10;
+            default: return 50;
+        }
+    }
+
+    function animateUpgrade(bet, multiplier, resultWin, callback) {
+        const overlay = document.createElement('div');
+        overlay.className = 'upgrade-animation-overlay';
+        overlay.innerHTML = `<div class="dual-circles"><div class="circle circle-green" id="greenCircle"></div><div class="circle circle-red" id="redCircle"></div></div><div class="upgrade-result-text" id="upgradeResultMsg" style="display: none;"></div><button id="closeUpgradeBtn" style="margin-top: 2rem; background: var(--button-gradient); border: none; border-radius: 2rem; padding: 0.5rem 1rem; color: white; cursor: pointer; display: none;">Закрыть</button>`;
+        document.body.appendChild(overlay);
+        const green = overlay.querySelector('#greenCircle');
+        const red = overlay.querySelector('#redCircle');
+        const resultMsg = overlay.querySelector('#upgradeResultMsg');
+        const closeBtn = overlay.querySelector('#closeUpgradeBtn');
+        let stepCount = 0;
+        const totalSteps = 18;
+        let intervalTime = 80;
+        let timer = null;
+        function nextBlink() {
+            if (stepCount >= totalSteps) {
+                clearInterval(timer);
+                if (resultWin) {
+                    green.classList.add('final-win');
+                    red.style.opacity = '0.5';
+                    resultMsg.textContent = `ВЫИГРЫШ! +${(bet * multiplier).toLocaleString('ru-RU')}₽`;
+                    resultMsg.style.color = '#7AFF8A';
+                    playWinSound();
+                } else {
+                    red.classList.add('final-lose');
+                    green.style.opacity = '0.5';
+                    resultMsg.textContent = `ПРОИГРЫШ! -${bet.toLocaleString('ru-RU')}₽`;
+                    resultMsg.style.color = '#FF9F7A';
+                    playLoseSound();
+                }
+                resultMsg.style.display = 'block';
+                closeBtn.style.display = 'block';
+                closeBtn.onclick = () => { overlay.remove(); if (callback) callback(); };
+                return;
+            }
+            if (stepCount % 2 === 0) {
+                green.classList.add('blink-green');
+                playTickSound();
+                setTimeout(() => green.classList.remove('blink-green'), 150);
+            } else {
+                red.classList.add('blink-red');
+                playTickSound();
+                setTimeout(() => red.classList.remove('blink-red'), 150);
+            }
+            if (stepCount > totalSteps/2) {
+                intervalTime += 25;
+                clearInterval(timer);
+                timer = setInterval(nextBlink, intervalTime);
+            }
+            stepCount++;
+        }
+        timer = setInterval(nextBlink, intervalTime);
+    }
+    
+    function executeUpgrade(nick, bet, multiplier) {
+        const balance = getBalance(nick);
+        if (bet <= 0 || bet > balance || ![1.5,2,3,5,10].includes(multiplier)) { alert('Ошибка ставки'); return false; }
+        let winChance = 0;
+        switch(multiplier) { case 1.5: winChance = 0.75; break; case 2: winChance = 0.5; break; case 3: winChance = 0.3333; break; case 5: winChance = 0.2; break; case 10: winChance = 0.1; break; }
+        const win = Math.random() < winChance;
+        if (win) {
+            const winAmount = bet * multiplier;
+            setBalance(nick, balance + winAmount);
+            addTransaction(nick, `🎲 Апгрейд: ставка ${bet}₽ x${multiplier} → выигрыш ${winAmount}₽`, winAmount);
+            const balDisplay = document.getElementById('mainBalanceDisplay');
+            if(balDisplay) balDisplay.innerHTML = (balance + winAmount).toLocaleString('ru-RU') + '<small> ₽</small>';
+            updateTransactionsUI(nick);
+            animateUpgrade(bet, multiplier, true, () => {});
+        } else {
+            setBalance(nick, balance - bet);
+            addTransaction(nick, `🎲 Апгрейд: ставка ${bet}₽ x${multiplier} → проигрыш`, -bet);
+            const balDisplay = document.getElementById('mainBalanceDisplay');
+            if(balDisplay) balDisplay.innerHTML = (balance - bet).toLocaleString('ru-RU') + '<small> ₽</small>';
+            updateTransactionsUI(nick);
+            animateUpgrade(bet, multiplier, false, () => {});
+        }
+        const ct = document.getElementById('clickerTotalEarned');
+        if(ct) ct.innerText = getClickerEarned(nick).toLocaleString('ru-RU');
+        return true;
+    }
+
+    function openUpgradeConfirm(nick, bet, multiplier) {
+        let winPercent = getWinPercent(multiplier);
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal active';
+        modalDiv.style.display = 'flex';
+        modalDiv.innerHTML = `<div class="modal-content"><h3>🎲 Подтверждение ставки</h3><p>Вы готовы поставить <strong>${bet.toLocaleString('ru-RU')} ₽</strong> на множитель <strong>×${multiplier}</strong>?</p><p>Шанс выигрыша: ${winPercent}%</p><div class="setting-item"><button id="confirmUpgradeBtn">✅ Да, рискнуть</button></div><div class="setting-item"><button id="cancelUpgradeBtn" class="close-modal">❌ Отмена</button></div></div>`;
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelector('#confirmUpgradeBtn').onclick = () => { modalDiv.remove(); executeUpgrade(nick, bet, multiplier); };
+        modalDiv.querySelector('#cancelUpgradeBtn').onclick = () => modalDiv.remove();
+    }
+
+    // Продажа (без изменений)
+    function sellItem(nick, index) { const inv = getInventory(nick); if(index >= inv.length) return; const item = inv[index]; const value = item.value; const newBal = getBalance(nick) + value; setBalance(nick, newBal); addTransaction(nick, `💰 Продажа предмета "${item.name}" за ${value}₽`, value); removeFromInventory(nick, index); const balDisplay = document.getElementById('mainBalanceDisplay'); if(balDisplay) balDisplay.innerHTML = newBal.toLocaleString('ru-RU') + '<small> ₽</small>'; updateTransactionsUI(nick); showInventory(nick); }
+    function sellAllItems(nick) { const inv = getInventory(nick); if(inv.length === 0) { alert('Инвентарь пуст'); return; } let total = inv.reduce((sum,i)=> sum + i.value, 0); const newBal = getBalance(nick) + total; setBalance(nick, newBal); addTransaction(nick, `💰 Продажа всех предметов из инвентаря на сумму ${total}₽`, total); saveInventory(nick, []); const balDisplay = document.getElementById('mainBalanceDisplay'); if(balDisplay) balDisplay.innerHTML = newBal.toLocaleString('ru-RU') + '<small> ₽</small>'; updateTransactionsUI(nick); showInventory(nick); }
+    function showInventory(nick) { const inv = getInventory(nick); const modalDiv = document.createElement('div'); modalDiv.className = 'modal active'; modalDiv.style.display = 'flex'; const totalValue = inv.reduce((s,i)=> s + i.value, 0); modalDiv.innerHTML = `<div class="modal-content" style="max-width:500px;"><h3>📦 Инвентарь</h3><div class="inventory-modal">${inv.length === 0 ? '<p>Пусто</p>' : inv.map((item, idx) => `<div class="inventory-item"><span><strong>${item.name}</strong> (${item.value}₽)</span><span style="font-size:0.6rem;">${item.date || ''}</span><button class="sell-btn" data-idx="${idx}">Продать</button></div>`).join('')}${inv.length > 0 ? `<div class="inventory-total">Общая стоимость: ${totalValue}₽</div><button class="sell-all-btn">Продать всё</button>` : ''}</div><button class="close-inv">Закрыть</button></div>`;
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelectorAll('.sell-btn').forEach(btn => { btn.onclick = (e) => { const idx = parseInt(btn.dataset.idx); sellItem(nick, idx); modalDiv.remove(); }; });
+        const sellAllBtn = modalDiv.querySelector('.sell-all-btn'); if(sellAllBtn) sellAllBtn.onclick = () => { sellAllItems(nick); modalDiv.remove(); };
+        modalDiv.querySelector('.close-inv').onclick = () => modalDiv.remove();
+    }
+
+    const container = document.getElementById('appContainer');
+    function render() { const s=getSession(); if(s) renderDashboard(s); else renderAuth(); }
+
+    function renderAuth() {
+        container.className = 'glass-panel';
+        container.innerHTML = `<div class="brand"><div class="brand-icon">⟁</div><h1>NEOBANK</h1></div><div class="auth-tabs"><button class="tab-btn active" id="tabLogin">ВХОД</button><button class="tab-btn" id="tabReg">РЕГИСТРАЦИЯ</button></div><div id="loginPanel"><div class="input-group"><label>👤 НИКНЕЙМ</label><input id="loginNick" class="input-field" placeholder="ваш ник"></div><div class="input-group"><label>🔒 ПАРОЛЬ</label><input type="password" id="loginPass" class="input-field" placeholder="****"></div><button id="doLogin" class="action-btn">ВОЙТИ</button><div id="loginMsg" class="message-area">💡 Придумайте уникальный ник (минимум 3 символа) и надёжный пароль. Ваши данные сохранятся в этом браузере.</div></div><div id="regPanel" class="hidden"><div class="input-group"><label>🏷️ НИКНЕЙМ</label><input id="regNick" class="input-field" placeholder="ваш ник"></div><div class="input-group"><label>📛 ИМЯ НА КАРТЕ</label><input id="regFull" class="input-field" placeholder="ALEX SMITH"></div><div class="input-group"><label>🔒 ПАРОЛЬ</label><input type="password" id="regPass" class="input-field" placeholder="****"></div><button id="doReg" class="action-btn">СОЗДАТЬ</button><div id="regMsg" class="message-area"></div></div><div class="demo-hint">🔐 Нет предустановленных аккаунтов. Зарегистрируйтесь, чтобы начать.</div>`;
+        document.getElementById('tabLogin').onclick = () => { document.getElementById('loginPanel').classList.remove('hidden'); document.getElementById('regPanel').classList.add('hidden'); document.getElementById('tabLogin').classList.add('active'); document.getElementById('tabReg').classList.remove('active'); };
+        document.getElementById('tabReg').onclick = () => { document.getElementById('regPanel').classList.remove('hidden'); document.getElementById('loginPanel').classList.add('hidden'); document.getElementById('tabReg').classList.add('active'); document.getElementById('tabLogin').classList.remove('active'); };
+        const doLogin = () => { let res=login(document.getElementById('loginNick').value, document.getElementById('loginPass').value); let msg=document.getElementById('loginMsg'); if(res.ok){ msg.innerHTML='✅ '+res.msg; setTimeout(render,600); } else msg.innerHTML='❌ '+res.msg; };
+        const doReg = () => { let res=register(document.getElementById('regNick').value, document.getElementById('regFull').value, document.getElementById('regPass').value); let msg=document.getElementById('regMsg'); msg.innerHTML=res.ok?'✅ '+res.msg:'❌ '+res.msg; if(res.ok){ document.getElementById('tabLogin').click(); } };
+        document.getElementById('doLogin').onclick=doLogin; document.getElementById('doReg').onclick=doReg;
+        ['loginNick','loginPass'].forEach(id=>document.getElementById(id).addEventListener('keypress',e=>{if(e.key==='Enter')doLogin();}));
+        ['regNick','regFull','regPass'].forEach(id=>document.getElementById(id).addEventListener('keypress',e=>{if(e.key==='Enter')doReg();}));
+    }
+
+    function createModal(nick, currentSettings) {
+        if(modalElement) modalElement.remove();
+        modalElement = document.createElement('div');
+        modalElement.className = 'modal';
+        modalElement.innerHTML = `<div class="modal-content"><h3>⚙️ Настройки</h3><div class="setting-item"><span>🎨 Тема</span><select id="themeSelect"><option value="default">Базовая</option><option value="dark-yellow">Чёрно-жёлтая</option><option value="white">Белая</option></select></div><div class="setting-item"><span>🔊 Громкость</span><input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="${currentSettings.volume}"></div><div class="setting-item"><button id="resetClickerStats">🔄 Сброс статистики кликера</button></div><div class="setting-item"><button id="clearHistoryBtn">🗑️ Очистить историю</button></div><div class="setting-item"><button id="logoutFromSettings">🚪 Выйти</button></div><button class="close-modal">Закрыть</button></div>`;
+        document.body.appendChild(modalElement);
+        return modalElement;
+    }
+
+    function renderDashboard(session) {
+        const nick=session.nick, full=session.fullname;
+        const card=getCardForUser(nick,full);
+        let balance=getBalance(nick);
+        const txs=(getTransactions()[nick]||[]).slice(0,7);
+        sessionClickCount=0;
+        const settings=loadSettings(nick);
+        applyTheme(settings.theme);
+        setVolume(settings.volume);
+        currentVolume=settings.volume;
+
+        container.className = 'glass-panel dashboard-mode';
+        container.innerHTML = `
+            <div class="brand"><div class="brand-icon">⟁</div><h1>NEOBANK</h1><div class="settings-icon" id="settingsBtn">⚙️</div></div>
+            <div class="dashboard-user"><div class="nick-badge">@${escapeHtml(nick)}</div></div>
+            <div class="card-stage"><div class="card-scene"><div class="card-flipper" id="cardFlipper">
+                <div class="card-front-face"><div class="holo-stripe"></div><div class="brand-group"><div class="card-chip-area"><div class="chip-sim"></div><div class="card-brand">⟁ NEOBANK</div></div><div class="platinum-badge">✦ PLATINUM ✦</div></div>
+                <div class="card-number">${card.cardNumber}</div><div class="card-details"><div><span>CARDHOLDER</span>${card.holderName}</div><div><span>VALID THRU</span>${card.expiry}</div></div>
+                <div class="flip-icon">🔄 нажми</div></div>
+                <div class="card-back-face"><div class="black-strip"></div><div class="cvv-box"><span class="cvv-label">CVV2/CVC2</span><div class="cvv-field">${card.cvv}</div></div>
+                <div class="back-footer-text">Защищённая карта • CVV неизменен</div><div class="back-micro">www.neobank.com | 24/7 support</div></div>
+            </div></div></div>
+
+            <div class="balance-widget"><div class="balance-widget-left"><div class="balance-label-main">Доступный баланс</div><div class="balance-amount-main" id="mainBalanceDisplay">${balance.toLocaleString('ru-RU')}<small> ₽</small></div></div></div>
+
+            <div class="dashboard-tabs">
+                <button class="dash-tab active" data-tab="transfer">💸 ПЕРЕВОДЫ</button>
+                <button class="dash-tab" data-tab="clicker">🖱️ КЛИКЕР</button>
+                <button class="dash-tab" data-tab="cases">🎁 КЕЙСЫ</button>
+                <button class="dash-tab" data-tab="upgrade">🎲 АПГРЕЙД</button>
+                <button class="dash-tab" data-tab="leaderboard">🏆 ТОП-10</button>
+            </div>
+
+            <div id="transferTab" class="dashboard-content">
+                <div class="transfer-section"><div class="transfer-header"><strong>💸 Перевод средств</strong></div><div class="transfer-row"><input type="text" id="toUser" placeholder="Ник или номер карты"><input type="number" id="sumAmount" placeholder="Сумма ₽"></div><div class="transfer-row"><input type="text" id="transferComment" placeholder="Комментарий"><button id="sendTransferBtn">Отправить</button></div><div id="transferStatus"></div></div>
+                <div class="transfer-section"><div class="transfer-header"><strong>📜 История операций</strong><button class="history-more" id="historyMoreBtn">📋 Подробнее</button></div><div class="tx-list" id="txList">${txs.map(t=>`<div class="tx-item"><span>${t.text}</span><span style="color:${t.amount>0?'#7AFF8A':'#FF9F7A'}">${t.amount>0?'+':''}${t.amount}₽</span><span>${t.date}</span></div>`).join('')||'<div class="tx-item">Нет операций</div>'}</div></div>
+            </div>
+
+            <div id="clickerTab" class="dashboard-content hidden">
+                <div class="clicker-area" id="clickerMainBtn"><div class="clicker-coin">💰</div><div class="clicker-main-text">+1 ₽ за клик</div><div class="clicker-sub-text">нажми сюда, чтобы заработать</div></div>
+                <div class="clicker-stats"><div class="stat-card"><div class="stat-label">Кликов за сессию</div><div class="stat-value" id="clickerCount">0</div></div><div class="stat-card"><div class="stat-label">Всего заработано</div><div class="stat-value" id="clickerTotalEarned">${getClickerEarned(nick).toLocaleString('ru-RU')}</div></div></div>
+                <div class="demo-hint">✨ Каждый клик приносит 1₽ на баланс.</div>
+            </div>
+
+            <div id="casesTab" class="dashboard-content hidden">
+                <button class="action-btn inventory-btn" id="showInventoryBtn">📦 Инвентарь</button>
+                ${Object.entries(CASES).map(([key,c])=>`<div class="case-card"><div class="case-info"><div class="case-price">${c.price.toLocaleString('ru-RU')} ₽</div><div class="case-desc">${c.name}</div></div><div class="case-buttons"><button class="info-btn" data-case="${key}">❓</button><button class="open-case-btn" data-case="${key}">🎲 Открыть</button></div></div>`).join('')}
+                <div class="demo-hint">⚠️ Открытие кейса списывает сумму. Система баланса: после крупного выигрыша шансы на удачу временно падают.</div>
+            </div>
+
+            <div id="upgradeTab" class="dashboard-content hidden">
+                <div class="upgrade-card">
+                    <strong>🎲 Апгрейд (Мигающие круги)</strong>
+                    <div class="multiplier-buttons" id="multiplierBtns">
+                        <button class="multiplier-btn" data-mult="1.5">×1.5 (75%)</button>
+                        <button class="multiplier-btn active" data-mult="2">×2 (50%)</button>
+                        <button class="multiplier-btn" data-mult="3">×3 (33%)</button>
+                        <button class="multiplier-btn" data-mult="5">×5 (20%)</button>
+                        <button class="multiplier-btn" data-mult="10">×10 (10%)</button>
+                    </div>
+                    <div class="bet-input">
+                        <input type="number" id="betAmount" placeholder="Сумма ставки (минимум 50)" min="50" step="50" value="1000">
+                        <button class="upgrade-btn" id="startUpgradeBtn">🎲 Сделать ставку</button>
+                    </div>
+                    <div class="demo-hint" style="margin-top: 0.5rem;">⚡ Зелёный круг — победа, красный — проигрыш. Анимация с замедлением.</div>
+                </div>
+            </div>
+
+            <div id="leaderboardTab" class="dashboard-content hidden">
+                <div class="leaderboard-title" style="color:#FFD966; text-align:center; margin-bottom:0.5rem;">🏆 Лучшие игроки NeoBank</div>
+                <div id="leaderboardList" style="background: rgba(0,0,0,0.3); border-radius: 1rem; padding: 0.5rem;"></div>
+                <div class="demo-hint" style="margin-top:0.5rem;">Ваши рекорды автоматически сохраняются в облаке. Чем выше баланс – тем выше место!</div>
+            </div>
+
+            <div class="demo-hint">✨ Нажми на карту — перевернётся. ⚙️ Настройки — тема, громкость, выход.</div>
+        `;
+
+        // Переворот карты
+        const cardFlipper = document.getElementById('cardFlipper');
+        let isFlipped = false;
+        if(cardFlipper) cardFlipper.onclick = (e) => { e.stopPropagation(); isFlipped = !isFlipped; if(isFlipped) cardFlipper.classList.add('flipped'); else cardFlipper.classList.remove('flipped'); };
+        
+        const transferTab = document.getElementById('transferTab'), clickerTab = document.getElementById('clickerTab'), casesTab = document.getElementById('casesTab'), upgradeTab = document.getElementById('upgradeTab'), leaderboardTab = document.getElementById('leaderboardTab');
+        const dashTabs = document.querySelectorAll('.dash-tab');
+        dashTabs.forEach(tab => { tab.onclick = () => { dashTabs.forEach(t=>t.classList.remove('active')); tab.classList.add('active'); if(tab.dataset.tab==='transfer'){ transferTab.classList.remove('hidden'); clickerTab.classList.add('hidden'); casesTab.classList.add('hidden'); upgradeTab.classList.add('hidden'); leaderboardTab.classList.add('hidden'); } else if(tab.dataset.tab==='clicker'){ transferTab.classList.add('hidden'); clickerTab.classList.remove('hidden'); casesTab.classList.add('hidden'); upgradeTab.classList.add('hidden'); leaderboardTab.classList.add('hidden'); } else if(tab.dataset.tab==='cases'){ transferTab.classList.add('hidden'); clickerTab.classList.add('hidden'); casesTab.classList.remove('hidden'); upgradeTab.classList.add('hidden'); leaderboardTab.classList.add('hidden'); } else if(tab.dataset.tab==='upgrade'){ transferTab.classList.add('hidden'); clickerTab.classList.add('hidden'); casesTab.classList.add('hidden'); upgradeTab.classList.remove('hidden'); leaderboardTab.classList.add('hidden'); } else if(tab.dataset.tab==='leaderboard'){ transferTab.classList.add('hidden'); clickerTab.classList.add('hidden'); casesTab.classList.add('hidden'); upgradeTab.classList.add('hidden'); leaderboardTab.classList.remove('hidden'); loadLeaderboard(); } }; });
+        document.getElementById('clickerMainBtn').onclick = () => addClickMoney(nick, true);
+        document.getElementById('showInventoryBtn').onclick = () => showInventory(nick);
+        document.querySelectorAll('.open-case-btn').forEach(btn => { const caseKey = btn.dataset.case; btn.onclick = () => openCaseWithConfirm(nick, caseKey); });
+        document.querySelectorAll('.info-btn').forEach(btn => { const caseKey = btn.dataset.case; btn.onclick = () => showCaseInfo(CASES[caseKey]); });
+        document.getElementById('historyMoreBtn').onclick = () => showFullHistory(nick);
+        
+        const multBtns = document.querySelectorAll('.multiplier-btn');
+        multBtns.forEach(btn => { btn.onclick = () => { multBtns.forEach(b=>b.classList.remove('active')); btn.classList.add('active'); currentMultiplier = parseFloat(btn.dataset.mult); }; });
+        document.getElementById('startUpgradeBtn').onclick = () => { let betAmount = parseFloat(document.getElementById('betAmount').value); if (isNaN(betAmount) || betAmount < 50) { alert('Минимальная ставка 50 ₽'); return; } if (betAmount > getBalance(nick)) { alert('Недостаточно средств!'); return; } openUpgradeConfirm(nick, betAmount, currentMultiplier); };
+        
+        const settingsBtn = document.getElementById('settingsBtn');
+        let modal = null;
+        settingsBtn.onclick = () => { if(modal) modal.remove(); modal = createModal(nick, { theme: settings.theme, volume: currentVolume }); const themeSelect = modal.querySelector('#themeSelect'); const volumeSlider = modal.querySelector('#volumeSlider'); const resetBtn = modal.querySelector('#resetClickerStats'); const clearHistory = modal.querySelector('#clearHistoryBtn'); const logoutBtn = modal.querySelector('#logoutFromSettings'); const closeBtn = modal.querySelector('.close-modal'); themeSelect.value = settings.theme; volumeSlider.value = currentVolume; volumeSlider.oninput = (e) => { const val = parseFloat(e.target.value); setVolume(val); saveSettings(nick, themeSelect.value, val); currentVolume = val; }; themeSelect.onchange = (e) => { const newTheme = e.target.value; applyTheme(newTheme); saveSettings(nick, newTheme, currentVolume); settings.theme = newTheme; }; resetBtn.onclick = () => { setClickerEarned(nick, 0); document.getElementById('clickerTotalEarned').innerText = '0'; addTransaction(nick, '🔄 Сброс статистики кликера', 0); alert('Статистика кликера сброшена'); modal.classList.remove('active'); modal.remove(); modal = null; renderDashboard(getSession()); }; clearHistory.onclick = () => { const txs = getTransactions(); txs[nick] = []; saveTransactions(txs); addTransaction(nick, '🗑️ История операций очищена', 0); alert('История операций очищена'); updateTransactionsUI(nick); modal.classList.remove('active'); modal.remove(); modal = null; }; logoutBtn.onclick = () => { logout(); modal.classList.remove('active'); if(modal) modal.remove(); modal = null; }; closeBtn.onclick = () => { modal.classList.remove('active'); modal.remove(); modal = null; }; modal.classList.add('active'); };
+        
+        const sendBtn = document.getElementById('sendTransferBtn');
+        const toUser = document.getElementById('toUser'), sumAm = document.getElementById('sumAmount'), comment = document.getElementById('transferComment'), statusDiv = document.getElementById('transferStatus');
+        sendBtn.onclick = () => { const amount = parseFloat(sumAm.value); if(isNaN(amount) || amount<=0){ statusDiv.innerText='❌ Введите сумму >0'; return; } const res = transfer(nick, toUser.value, amount, comment.value); statusDiv.innerText = res; if(res.startsWith('✅')){ setTimeout(()=>{ renderDashboard(getSession()); },400); } else { setTimeout(()=>{ if(statusDiv) statusDiv.innerText=''; },2500); } };
+    }
+
+    function escapeHtml(s) { return String(s).replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    function initDemo() {}
+    initDemo();
+    render();
+</script>
+</body>
+</html>
