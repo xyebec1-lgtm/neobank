@@ -29,51 +29,20 @@
         function escapeHtmlLeader(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
     </script>
     
-    <!-- Анти-чит и блокировка консоли -->
     <script>
-        (function() {
-            // Блокировка контекстного меню
-            document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
-            // Блокировка клавиш разработчика
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'F12') { e.preventDefault(); return false; }
-                if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) { e.preventDefault(); return false; }
-                if (e.ctrlKey && e.key === 'U') { e.preventDefault(); return false; }
-                if (e.ctrlKey && e.shiftKey && e.key === 'K') { e.preventDefault(); return false; }
-            });
-            // Проверка целостности localStorage
-            const keys = ['neobank_final_v9', 'neobank_cards_v9', 'neobank_balances_v9', 'neobank_transactions_v9', 'neobank_clicker_earned', 'neobank_user_settings', 'neobank_inventory', 'neobank_greed_counter'];
-            function getChecksum() {
-                let checksum = '';
-                for (let key of keys) {
-                    const val = localStorage.getItem(key);
-                    checksum += (val ? val.length : 0) + '|';
-                }
-                return checksum;
-            }
-            function checkIntegrity() {
-                const stored = localStorage.getItem('integrity_checksum');
-                const current = getChecksum();
-                if (stored && stored !== current) {
-                    localStorage.setItem('cheat_detected', 'true');
-                    return false;
-                }
-                localStorage.setItem('integrity_checksum', current);
-                return true;
-            }
-            const originalSetItem = localStorage.setItem;
-            localStorage.setItem = function(key, value) {
-                originalSetItem.apply(this, arguments);
-                if (keys.includes(key)) setTimeout(() => checkIntegrity(), 10);
-            };
-            if (localStorage.getItem('cheat_detected') === 'true') {
-                alert('Обнаружены подозрительные изменения. Прогресс сброшен.');
-                localStorage.clear();
-                location.reload();
-            }
-            checkIntegrity();
-        })();
-    </script>
+    (function() {
+        // Блокировка контекстного меню (не вредит)
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+        // Блокировка клавиш разработчика (не вредит)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12') { e.preventDefault(); return false; }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) { e.preventDefault(); return false; }
+            if (e.ctrlKey && e.key === 'U') { e.preventDefault(); return false; }
+        });
+        // Убираем проверку целостности! Прогресс не будет сбрасываться.
+        console.log('Анти-чит: блокировка консоли активна, сброс прогресса отключён');
+    })();
+</script>
     
     <style>
         /* ========== ВСЕ СТИЛИ (ТЕ ЖЕ, ЧТО В ТВОЁМ ФАЙЛЕ) ========== */
