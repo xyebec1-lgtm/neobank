@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>NeoBank | Премиум карта + Кейсы + Апгрейд + Таблица лидеров</title>
+    <title>NeoBank | Кейсы, Апгрейд, Таблица лидеров</title>
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -29,23 +29,20 @@
         function escapeHtmlLeader(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
     </script>
     
+    <!-- Анти-чит (без сброса прогресса) -->
     <script>
-    (function() {
-        // Блокировка контекстного меню (не вредит)
-        document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
-        // Блокировка клавиш разработчика (не вредит)
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'F12') { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) { e.preventDefault(); return false; }
-            if (e.ctrlKey && e.key === 'U') { e.preventDefault(); return false; }
-        });
-        // Убираем проверку целостности! Прогресс не будет сбрасываться.
-        console.log('Анти-чит: блокировка консоли активна, сброс прогресса отключён');
-    })();
-</script>
+        (function() {
+            document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12') { e.preventDefault(); return false; }
+                if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) { e.preventDefault(); return false; }
+                if (e.ctrlKey && e.key === 'U') { e.preventDefault(); return false; }
+            });
+            console.log('Анти-чит: блокировка консоли активна, прогресс не сбрасывается');
+        })();
+    </script>
     
     <style>
-        /* ========== ВСЕ СТИЛИ (ТЕ ЖЕ, ЧТО В ТВОЁМ ФАЙЛЕ) ========== */
         * {
             margin: 0;
             padding: 0;
@@ -142,16 +139,16 @@
             border: 1px solid var(--glass-border);
             box-shadow: 0 30px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
             width: 100%;
-            max-width: 580px;
-            padding: 1.8rem;
+            max-width: 600px;
+            padding: 2rem;
             transition: all 0.3s ease;
         }
 
-        .brand { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-bottom: 1.5rem; position: relative; }
-        .settings-icon { position: absolute; right: 0; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.4rem; background: rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .brand { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-bottom: 1.8rem; position: relative; }
+        .settings-icon { position: absolute; right: 0; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 1.5rem; background: rgba(255,255,255,0.1); width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
         .settings-icon:hover { background: rgba(255,255,255,0.2); transform: translateY(-50%) scale(1.05); }
-        .brand-icon { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #003EAA); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; box-shadow: 0 5px 15px var(--accent-glow); }
-        .brand h1 { font-size: 1.7rem; font-weight: 600; background: linear-gradient(135deg, #FFFFFF, var(--text-secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .brand-icon { width: 45px; height: 45px; background: linear-gradient(135deg, var(--accent), #003EAA); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: 0 5px 15px var(--accent-glow); }
+        .brand h1 { font-size: 1.8rem; font-weight: 600; background: linear-gradient(135deg, #FFFFFF, var(--text-secondary)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
         .modal {
             display: none;
@@ -160,8 +157,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(10px);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -173,7 +170,7 @@
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
             border-radius: 2rem;
-            padding: 1.5rem;
+            padding: 1.8rem;
             width: 90%;
             max-width: 500px;
             color: var(--text-primary);
@@ -183,9 +180,10 @@
         .modal-content h3 {
             margin-bottom: 1rem;
             text-align: center;
+            font-size: 1.4rem;
         }
         .modal-content .setting-item {
-            margin: 1rem 0;
+            margin: 1.2rem 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -194,33 +192,36 @@
             background: var(--input-bg);
             border: 1px solid var(--input-border);
             border-radius: 2rem;
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 1rem;
             color: var(--text-primary);
             outline: none;
+            font-size: 0.9rem;
         }
         .modal-content button {
             background: var(--button-gradient);
             border: none;
             border-radius: 2rem;
-            padding: 0.5rem 1rem;
+            padding: 0.7rem;
             color: white;
             cursor: pointer;
             width: 100%;
-            margin-top: 0.5rem;
+            margin-top: 0.7rem;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
         .close-modal {
             margin-top: 1rem;
-            background: rgba(255,100,100,0.3);
+            background: rgba(255,100,100,0.4);
         }
         .chance-table {
             width: 100%;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             border-collapse: collapse;
             margin-top: 0.5rem;
         }
         .chance-table th, .chance-table td {
             border-bottom: 1px solid var(--input-border);
-            padding: 0.3rem;
+            padding: 0.4rem;
             text-align: left;
         }
         .chance-table th { color: #FFD966; }
@@ -234,8 +235,8 @@
         }
         .clicker-area:active { transform: scale(0.98); }
 
-        .auth-tabs { display: flex; gap: 1rem; background: rgba(0, 0, 0, 0.5); border-radius: 3rem; padding: 0.4rem; margin-bottom: 2rem; border: 1px solid rgba(72, 150, 255, 0.3); }
-        .tab-btn { flex: 1; background: transparent; border: none; padding: 0.7rem 0; border-radius: 2.5rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; color: #9AABD0; transition: 0.2s; }
+        .auth-tabs { display: flex; gap: 1rem; background: rgba(0, 0, 0, 0.5); border-radius: 3rem; padding: 0.5rem; margin-bottom: 2rem; border: 1px solid rgba(72, 150, 255, 0.3); }
+        .tab-btn { flex: 1; background: transparent; border: none; padding: 0.8rem 0; border-radius: 2.5rem; font-weight: 600; font-size: 1rem; cursor: pointer; color: #9AABD0; transition: 0.2s; }
         .tab-btn.active { background: #102A4F; color: white; box-shadow: 0 2px 12px var(--accent-glow); }
 
         .dashboard-tabs {
@@ -244,7 +245,7 @@
             background: rgba(0, 0, 0, 0.4);
             border-radius: 3rem;
             padding: 0.3rem;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
             border: 1px solid rgba(72, 150, 255, 0.2);
             flex-wrap: wrap;
             justify-content: center;
@@ -253,10 +254,10 @@
             flex: 1;
             background: transparent;
             border: none;
-            padding: 0.5rem 0;
+            padding: 0.6rem 0;
             border-radius: 2rem;
             font-weight: 600;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             cursor: pointer;
             color: #9AABD0;
             transition: 0.2s;
@@ -274,7 +275,7 @@
         .case-card {
             background: var(--widget-bg);
             border-radius: 1.2rem;
-            padding: 0.8rem;
+            padding: 1rem;
             margin: 0.8rem 0;
             border: 1px solid var(--input-border);
             transition: 0.2s;
@@ -284,39 +285,39 @@
             flex-wrap: wrap;
         }
         .case-info { flex: 3; }
-        .case-price { font-size: 1.2rem; font-weight: bold; color: #FFD966; }
-        .case-desc { font-size: 0.7rem; color: var(--text-secondary); }
+        .case-price { font-size: 1.3rem; font-weight: bold; color: #FFD966; }
+        .case-desc { font-size: 0.75rem; color: var(--text-secondary); }
         .case-buttons { display: flex; gap: 0.5rem; align-items: center; }
         .open-case-btn, .info-btn {
             background: var(--accent);
             border: none;
             border-radius: 2rem;
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 1rem;
             font-weight: bold;
             cursor: pointer;
             color: white;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
         }
         .info-btn { background: rgba(255,255,255,0.2); }
-        .inventory-btn { background: var(--button-gradient); margin-bottom: 1rem; width: 100%; }
+        .inventory-btn { background: var(--button-gradient); margin-bottom: 1rem; width: 100%; padding: 0.7rem; }
 
         /* Апгрейд */
         .upgrade-card {
             background: var(--widget-bg);
             border-radius: 1.2rem;
-            padding: 1rem;
+            padding: 1.2rem;
             margin: 0.8rem 0;
             border: 1px solid var(--input-border);
         }
         .upgrade-card strong {
             color: #FFD966;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
         }
         .multiplier-buttons {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.8rem;
             flex-wrap: wrap;
             margin: 1rem 0;
             justify-content: center;
@@ -325,11 +326,11 @@
             background: rgba(255,255,255,0.1);
             border: 1px solid var(--accent);
             border-radius: 2rem;
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 1rem;
             font-weight: bold;
             cursor: pointer;
             color: var(--text-primary);
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
         .multiplier-btn.active {
             background: var(--accent);
@@ -338,7 +339,7 @@
         }
         .bet-input {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.8rem;
             margin: 1rem 0;
             align-items: center;
         }
@@ -347,9 +348,9 @@
             background: var(--input-bg);
             border: 1px solid var(--input-border);
             border-radius: 2rem;
-            padding: 0.7rem 1rem;
+            padding: 0.8rem 1rem;
             color: var(--text-primary);
-            font-size: 0.9rem;
+            font-size: 1rem;
             outline: none;
         }
         .bet-input input:focus {
@@ -360,11 +361,11 @@
             background: var(--button-gradient);
             border: none;
             border-radius: 2rem;
-            padding: 0.7rem 1.2rem;
+            padding: 0.8rem 1.2rem;
             font-weight: bold;
             cursor: pointer;
             color: white;
-            font-size: 0.9rem;
+            font-size: 1rem;
             box-shadow: 0 2px 5px var(--accent-glow);
         }
 
@@ -416,26 +417,26 @@
         .rarity-gold { background: #b68b40; }
 
         .inventory-modal { background: var(--glass-bg); border-radius: 1.5rem; padding: 1rem; max-height: 400px; overflow-y: auto; }
-        .inventory-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--input-border); padding: 0.5rem; font-size: 0.8rem; gap: 0.5rem; flex-wrap: wrap; }
-        .sell-btn { background: #28a745; border: none; border-radius: 2rem; padding: 0.2rem 0.6rem; color: white; cursor: pointer; font-size: 0.7rem; }
+        .inventory-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--input-border); padding: 0.7rem; font-size: 0.85rem; gap: 0.5rem; flex-wrap: wrap; }
+        .sell-btn { background: #28a745; border: none; border-radius: 2rem; padding: 0.3rem 0.8rem; color: white; cursor: pointer; font-size: 0.75rem; }
         .sell-all-btn { background: #dc3545; margin-top: 0.5rem; }
         .inventory-total { text-align: right; font-weight: bold; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--input-border); }
 
-        .clicker-area { background: var(--clicker-bg); border-radius: 1.5rem; padding: 1.2rem; text-align: center; cursor: pointer; user-select: none; border: 1px solid var(--input-border); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .clicker-coin { font-size: 4rem; display: inline-block; animation: float 2s ease-in-out infinite; }
+        .clicker-area { background: var(--clicker-bg); border-radius: 1.5rem; padding: 1.5rem; text-align: center; cursor: pointer; user-select: none; border: 1px solid var(--input-border); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .clicker-coin { font-size: 4.5rem; display: inline-block; animation: float 2s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0px); } }
-        .clicker-main-text { font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 8px rgba(255,200,0,0.5); margin-top: 0.5rem; }
-        .clicker-sub-text { font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.2rem; }
-        .clicker-stats { display: flex; justify-content: space-between; margin-top: 1rem; gap: 1rem; }
-        .stat-card { background: rgba(0,0,0,0.4); border-radius: 1rem; padding: 0.5rem; flex: 1; text-align: center; }
-        .stat-label { font-size: 0.6rem; color: #8AA5D0; }
-        .stat-value { font-size: 1.2rem; font-weight: bold; color: #FFD966; }
+        .clicker-main-text { font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #FFD966, #FFB347); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 8px rgba(255,200,0,0.5); margin-top: 0.5rem; }
+        .clicker-sub-text { font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem; }
+        .clicker-stats { display: flex; justify-content: space-between; margin-top: 1.2rem; gap: 1rem; }
+        .stat-card { background: rgba(0,0,0,0.4); border-radius: 1rem; padding: 0.7rem; flex: 1; text-align: center; }
+        .stat-label { font-size: 0.7rem; color: #8AA5D0; }
+        .stat-value { font-size: 1.3rem; font-weight: bold; color: #FFD966; }
 
         .input-group { margin-bottom: 1.3rem; }
-        .input-group label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.4rem; }
-        .input-field { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 1.2rem; padding: 0.85rem 1.2rem; font-size: 0.95rem; color: var(--text-primary); outline: none; }
-        .action-btn { width: 100%; background: var(--button-gradient); border: none; border-radius: 2rem; padding: 0.85rem; font-weight: 700; font-size: 1rem; color: white; cursor: pointer; margin-top: 0.5rem; box-shadow: 0 6px 14px var(--accent-glow); }
-        .message-area { margin-top: 1rem; font-size: 0.75rem; text-align: center; background: rgba(0,0,0,0.5); padding: 0.6rem; border-radius: 1.2rem; color: var(--text-secondary); }
+        .input-group label { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); margin-bottom: 0.5rem; }
+        .input-field { width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 1.2rem; padding: 0.9rem 1.2rem; font-size: 1rem; color: var(--text-primary); outline: none; }
+        .action-btn { width: 100%; background: var(--button-gradient); border: none; border-radius: 2rem; padding: 1rem; font-weight: 700; font-size: 1rem; color: white; cursor: pointer; margin-top: 0.5rem; box-shadow: 0 6px 14px var(--accent-glow); }
+        .message-area { margin-top: 1rem; font-size: 0.85rem; text-align: center; background: rgba(0,0,0,0.5); padding: 0.8rem; border-radius: 1.2rem; color: var(--text-secondary); }
         .hidden { display: none; }
 
         .card-stage { display: flex; justify-content: center; align-items: center; margin: 0.5rem 0 1rem 0; height: 210px; position: relative; z-index: 5; }
@@ -464,23 +465,23 @@
         .back-footer-text { font-size: 0.45rem; color: #5A72A0; text-align: center; margin-top: auto; margin-bottom: 0.5rem; }
         .back-micro { font-size: 0.4rem; color: #4A6085; text-align: center; margin-bottom: 0.5rem; }
 
-        .balance-widget { background: var(--widget-bg); border-radius: 1.2rem; padding: 0.8rem 1.2rem; margin: 1rem 0 0.8rem 0; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--input-border); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
-        .balance-label-main { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; color: #8AA5D0; }
-        .balance-amount-main { font-size: 1.8rem; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
+        .balance-widget { background: var(--widget-bg); border-radius: 1.2rem; padding: 1rem 1.5rem; margin: 1rem 0 1rem 0; display: flex; align-items: center; justify-content: space-between; border: 1px solid var(--input-border); box-shadow: 0 6px 15px rgba(0,0,0,0.3); }
+        .balance-label-main { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #8AA5D0; }
+        .balance-amount-main { font-size: 2rem; font-weight: 800; color: var(--text-primary); line-height: 1.1; }
 
-        .transfer-section { background: rgba(0,0,0,0.45); border-radius: 1.2rem; padding: 0.8rem; margin: 0.8rem 0; color: var(--text-secondary); }
+        .transfer-section { background: rgba(0,0,0,0.45); border-radius: 1.2rem; padding: 1rem; margin: 0.8rem 0; color: var(--text-secondary); }
         .transfer-section strong { color: var(--text-primary); }
-        .transfer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
-        .history-more { background: rgba(255,255,255,0.15); border: none; border-radius: 2rem; padding: 0.2rem 0.6rem; font-size: 0.65rem; cursor: pointer; color: var(--text-secondary); }
-        .transfer-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
-        .transfer-row input { flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 2rem; padding: 0.5rem 0.9rem; color: var(--text-primary); font-size: 0.75rem; }
-        .transfer-row button { background: var(--accent); border: none; border-radius: 2rem; padding: 0.5rem 1rem; font-weight: bold; cursor: pointer; color: white; font-size: 0.75rem; }
+        .transfer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+        .history-more { background: rgba(255,255,255,0.15); border: none; border-radius: 2rem; padding: 0.3rem 0.8rem; font-size: 0.7rem; cursor: pointer; color: var(--text-secondary); }
+        .transfer-row { display: flex; gap: 0.8rem; margin-top: 0.8rem; }
+        .transfer-row input { flex: 1; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 2rem; padding: 0.6rem 1rem; color: var(--text-primary); font-size: 0.85rem; }
+        .transfer-row button { background: var(--accent); border: none; border-radius: 2rem; padding: 0.6rem 1.2rem; font-weight: bold; cursor: pointer; color: white; font-size: 0.85rem; }
         .tx-list { max-height: 170px; overflow-y: auto; margin-top: 0.5rem; }
-        .tx-item { background: rgba(255,255,255,0.08); border-radius: 0.9rem; padding: 0.5rem; margin: 0.3rem 0; font-size: 0.65rem; display: flex; justify-content: space-between; color: var(--text-secondary); align-items: center; }
-        .dashboard-user { display: flex; justify-content: flex-start; margin-bottom: 0.5rem; }
-        .nick-badge { background: #0D1F40; padding: 0.2rem 0.9rem; border-radius: 2rem; font-size: 0.75rem; color: #C4DEFF; }
-        .demo-hint { font-size: 0.55rem; text-align: center; color: var(--demo-text); margin-top: 0.8rem; border-top: 1px solid var(--input-border); padding-top: 0.8rem; }
-        #transferStatus { font-size: 0.65rem; margin-top: 6px; color: #B8D0FF; }
+        .tx-item { background: rgba(255,255,255,0.08); border-radius: 0.9rem; padding: 0.6rem; margin: 0.3rem 0; font-size: 0.7rem; display: flex; justify-content: space-between; color: var(--text-secondary); align-items: center; }
+        .dashboard-user { display: flex; justify-content: flex-start; margin-bottom: 0.8rem; }
+        .nick-badge { background: #0D1F40; padding: 0.3rem 1rem; border-radius: 2rem; font-size: 0.85rem; color: #C4DEFF; }
+        .demo-hint { font-size: 0.65rem; text-align: center; color: var(--demo-text); margin-top: 1rem; border-top: 1px solid var(--input-border); padding-top: 1rem; }
+        #transferStatus { font-size: 0.7rem; margin-top: 6px; color: #B8D0FF; }
 
         /* Анимация апгрейда (мигающие круги) */
         .upgrade-animation-overlay {
@@ -504,26 +505,16 @@
             margin-bottom: 2rem;
         }
         .circle {
-            width: 120px;
-            height: 120px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
             transition: all 0.1s ease;
         }
-        .circle-green {
-            background-color: #2ecc71;
-            box-shadow: 0 0 0 rgba(46,204,113,0);
-        }
-        .circle-red {
-            background-color: #e74c3c;
-            box-shadow: 0 0 0 rgba(231,76,60,0);
-        }
-        .blink-green {
-            animation: blinkGreen 0.15s linear;
-        }
-        .blink-red {
-            animation: blinkRed 0.15s linear;
-        }
+        .circle-green { background-color: #2ecc71; }
+        .circle-red { background-color: #e74c3c; }
+        .blink-green { animation: blinkGreen 0.15s linear; }
+        .blink-red { animation: blinkRed 0.15s linear; }
         @keyframes blinkGreen {
             0% { box-shadow: 0 0 0 rgba(46,204,113,0); }
             50% { box-shadow: 0 0 30px #2ecc71, 0 0 10px #2ecc71; background-color: #6feb9e; }
@@ -534,12 +525,8 @@
             50% { box-shadow: 0 0 30px #e74c3c, 0 0 10px #e74c3c; background-color: #f07c6e; }
             100% { box-shadow: 0 0 0 rgba(231,76,60,0); }
         }
-        .final-win {
-            animation: finalGlowWin 0.5s ease-out forwards;
-        }
-        .final-lose {
-            animation: finalGlowLose 0.5s ease-out forwards;
-        }
+        .final-win { animation: finalGlowWin 0.5s ease-out forwards; }
+        .final-lose { animation: finalGlowLose 0.5s ease-out forwards; }
         @keyframes finalGlowWin {
             0% { box-shadow: 0 0 10px #2ecc71; background-color: #2ecc71; }
             100% { box-shadow: 0 0 40px #2ecc71, 0 0 20px #2ecc71; background-color: #2ecc71; }
@@ -549,7 +536,7 @@
             100% { box-shadow: 0 0 40px #e74c3c, 0 0 20px #e74c3c; background-color: #e74c3c; }
         }
         .upgrade-result-text {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: bold;
             margin-top: 1rem;
         }
@@ -563,18 +550,26 @@
 <div id="appContainer"></div>
 
 <script>
-    // ========== ПОЛНАЯ ОЧИСТКА ВСЕХ ДАННЫХ (удаление старых аккаунтов) ==========
+    // ========== ПОЛНАЯ ОЧИСТКА ДАННЫХ (ТОЛЬКО ОДИН РАЗ ПРИ ПЕРВОМ ЗАПУСКЕ) ==========
     (function cleanupOldData() {
+        if (localStorage.getItem('neobank_initialized')) return;
+        
         const keys = [
             'neobank_final_v9', 'neobank_cards_v9', 'neobank_balances_v9',
             'neobank_transactions_v9', 'neobank_clicker_earned', 'neobank_user_settings',
             'neobank_inventory', 'neobank_greed_counter'
         ];
-        for (let key of keys) localStorage.removeItem(key);
-        sessionStorage.removeItem('bank_session');
-        console.log('Все старые аккаунты и данные удалены.');
+        for (let key of keys) {
+            localStorage.removeItem(key);
+        }
+        // НЕ УДАЛЯЕМ СЕССИЮ! Оставляем, чтобы игрок не вылетал при обновлении.
+        // sessionStorage.removeItem('bank_session'); // ЭТА СТРОКА УДАЛЕНА!
+        
+        localStorage.setItem('neobank_initialized', 'true');
+        console.log('Очистка данных выполнена один раз при первом запуске.');
     })();
 
+    // ========== ХРАНИЛИЩА ==========
     const KEY_USERS = 'neobank_final_v9';
     const KEY_CARDS = 'neobank_cards_v9';
     const KEY_BALANCES = 'neobank_balances_v9';
@@ -587,6 +582,7 @@
     let audioCtx = null;
     let currentVolume = 0.08;
     let modalElement = null;
+    let upgradeInProgress = false; // защита от повторного нажатия во время анимации апгрейда
 
     function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
     function playClickSound() { try { initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 880; gain.gain.value = currentVolume; osc.type = 'sine'; osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.25); osc.stop(audioCtx.currentTime + 0.2); audioCtx.resume(); } catch(e) {} }
@@ -634,12 +630,10 @@
     function logout() { sessionStorage.removeItem('bank_session'); render(); }
     function getBalance(nick) { return getBalances()[nick] || 0; }
     
-    // ========== ИСПРАВЛЕННАЯ setBalance С СОХРАНЕНИЕМ РЕКОРДА ==========
     function setBalance(nick, amount) {
         let b = getBalances();
         b[nick] = amount;
         saveBalances(b);
-        // Сохраняем максимальный баланс в Supabase
         let maxKey = `maxBalance_${nick}`;
         let currentMax = parseFloat(localStorage.getItem(maxKey) || 0);
         if (amount > currentMax) {
@@ -654,7 +648,6 @@
     function updateTransactionsUI(nick) { const txs = getTransactions()[nick] || []; const txListDiv = document.getElementById('txList'); if(txListDiv) { if(txs.length===0) txListDiv.innerHTML = '<div class="tx-item">Нет операций</div>'; else txListDiv.innerHTML = txs.slice(0,7).map(t=>`<div class="tx-item"><span>${t.text}</span><span style="color:${t.amount>0?'#7AFF8A':'#FF9F7A'}">${t.amount>0?'+':''}${t.amount}₽</span><span>${t.date}</span></div>`).join(''); } }
     function addClickMoney(nick, updateUI = true) { const bal = getBalance(nick); setBalance(nick, bal+1); addClickerEarned(nick, 1); playClickSound(); sessionClickCount++; addTransaction(nick, `🖱️ Кликер +1₽`, +1); if(updateUI) { const bd=document.getElementById('mainBalanceDisplay'); if(bd) bd.innerHTML = (bal+1).toLocaleString('ru-RU')+'<small> ₽</small>'; const cc=document.getElementById('clickerCount'); if(cc) cc.innerText = sessionClickCount; const ct=document.getElementById('clickerTotalEarned'); if(ct) ct.innerText = getClickerEarned(nick).toLocaleString('ru-RU'); updateTransactionsUI(nick); } }
 
-    // Кейсы (оставляем без изменений, они используют setBalance)
     const CASES = {
         basic: { name: 'Базовый кейс', price: 500, items: [
             { name: 'Офисная мышь', value: 300, weight: 20, bad: true },
@@ -744,7 +737,7 @@
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal active';
         modalDiv.style.display = 'flex';
-        let itemsHtml = `<table class="chance-table"><tr><th>Предмет</th><th>Стоимость (₽)</th><th>Шанс</th></tr>`;
+        let itemsHtml = `<table class="chance-table"><table><th>Предмет</th><th>Стоимость (₽)</th><th>Шанс</th></tr>`;
         for (let item of caseData.items) { let chance = (item.weight / totalWeight * 100).toFixed(2); itemsHtml += `<tr><td>${item.name}</td><td>${item.value.toLocaleString('ru-RU')}</td><td>${chance}%<\/td></tr>`; }
         itemsHtml += `<\/table>`;
         modalDiv.innerHTML = `<div class="modal-content" style="max-width: 500px;"><h3>📋 Содержимое кейса: ${caseData.name}</h3>${itemsHtml}<button class="close-modal">Закрыть</button></div>`;
@@ -822,9 +815,7 @@
 
     function openCaseWithConfirm(nick, caseKey) { const caseData = CASES[caseKey]; if (!caseData) return; confirmOpenCase(nick, caseKey, caseData, () => { executeOpenCase(nick, caseKey); }); }
 
-    // ========== АПГРЕЙД С МИГАЮЩИМИ КРУГАМИ ==========
     let currentMultiplier = 2;
-
     function getWinPercent(multiplier) {
         switch(multiplier) {
             case 1.5: return 75;
@@ -867,7 +858,10 @@
                 }
                 resultMsg.style.display = 'block';
                 closeBtn.style.display = 'block';
-                closeBtn.onclick = () => { overlay.remove(); if (callback) callback(); };
+                closeBtn.onclick = () => {
+                    overlay.remove();
+                    if (callback) callback();
+                };
                 return;
             }
             if (stepCount % 2 === 0) {
@@ -890,11 +884,28 @@
     }
     
     function executeUpgrade(nick, bet, multiplier) {
+        if (upgradeInProgress) {
+            alert('Подождите, анимация предыдущей ставки ещё не завершена!');
+            return false;
+        }
         const balance = getBalance(nick);
-        if (bet <= 0 || bet > balance || ![1.5,2,3,5,10].includes(multiplier)) { alert('Ошибка ставки'); return false; }
+        if (bet <= 0 || bet > balance || ![1.5,2,3,5,10].includes(multiplier)) { 
+            alert('Ошибка ставки'); 
+            return false; 
+        }
         let winChance = 0;
-        switch(multiplier) { case 1.5: winChance = 0.75; break; case 2: winChance = 0.5; break; case 3: winChance = 0.3333; break; case 5: winChance = 0.2; break; case 10: winChance = 0.1; break; }
+        switch(multiplier) { 
+            case 1.5: winChance = 0.75; break;
+            case 2: winChance = 0.5; break;
+            case 3: winChance = 0.3333; break;
+            case 5: winChance = 0.2; break;
+            case 10: winChance = 0.1; break;
+            default: winChance = 0.5;
+        }
         const win = Math.random() < winChance;
+        
+        upgradeInProgress = true;
+        
         if (win) {
             const winAmount = bet * multiplier;
             setBalance(nick, balance + winAmount);
@@ -902,14 +913,18 @@
             const balDisplay = document.getElementById('mainBalanceDisplay');
             if(balDisplay) balDisplay.innerHTML = (balance + winAmount).toLocaleString('ru-RU') + '<small> ₽</small>';
             updateTransactionsUI(nick);
-            animateUpgrade(bet, multiplier, true, () => {});
+            animateUpgrade(bet, multiplier, true, () => {
+                upgradeInProgress = false;
+            });
         } else {
             setBalance(nick, balance - bet);
             addTransaction(nick, `🎲 Апгрейд: ставка ${bet}₽ x${multiplier} → проигрыш`, -bet);
             const balDisplay = document.getElementById('mainBalanceDisplay');
             if(balDisplay) balDisplay.innerHTML = (balance - bet).toLocaleString('ru-RU') + '<small> ₽</small>';
             updateTransactionsUI(nick);
-            animateUpgrade(bet, multiplier, false, () => {});
+            animateUpgrade(bet, multiplier, false, () => {
+                upgradeInProgress = false;
+            });
         }
         const ct = document.getElementById('clickerTotalEarned');
         if(ct) ct.innerText = getClickerEarned(nick).toLocaleString('ru-RU');
@@ -927,7 +942,6 @@
         modalDiv.querySelector('#cancelUpgradeBtn').onclick = () => modalDiv.remove();
     }
 
-    // Продажа (без изменений)
     function sellItem(nick, index) { const inv = getInventory(nick); if(index >= inv.length) return; const item = inv[index]; const value = item.value; const newBal = getBalance(nick) + value; setBalance(nick, newBal); addTransaction(nick, `💰 Продажа предмета "${item.name}" за ${value}₽`, value); removeFromInventory(nick, index); const balDisplay = document.getElementById('mainBalanceDisplay'); if(balDisplay) balDisplay.innerHTML = newBal.toLocaleString('ru-RU') + '<small> ₽</small>'; updateTransactionsUI(nick); showInventory(nick); }
     function sellAllItems(nick) { const inv = getInventory(nick); if(inv.length === 0) { alert('Инвентарь пуст'); return; } let total = inv.reduce((sum,i)=> sum + i.value, 0); const newBal = getBalance(nick) + total; setBalance(nick, newBal); addTransaction(nick, `💰 Продажа всех предметов из инвентаря на сумму ${total}₽`, total); saveInventory(nick, []); const balDisplay = document.getElementById('mainBalanceDisplay'); if(balDisplay) balDisplay.innerHTML = newBal.toLocaleString('ru-RU') + '<small> ₽</small>'; updateTransactionsUI(nick); showInventory(nick); }
     function showInventory(nick) { const inv = getInventory(nick); const modalDiv = document.createElement('div'); modalDiv.className = 'modal active'; modalDiv.style.display = 'flex'; const totalValue = inv.reduce((s,i)=> s + i.value, 0); modalDiv.innerHTML = `<div class="modal-content" style="max-width:500px;"><h3>📦 Инвентарь</h3><div class="inventory-modal">${inv.length === 0 ? '<p>Пусто</p>' : inv.map((item, idx) => `<div class="inventory-item"><span><strong>${item.name}</strong> (${item.value}₽)</span><span style="font-size:0.6rem;">${item.date || ''}</span><button class="sell-btn" data-idx="${idx}">Продать</button></div>`).join('')}${inv.length > 0 ? `<div class="inventory-total">Общая стоимость: ${totalValue}₽</div><button class="sell-all-btn">Продать всё</button>` : ''}</div><button class="close-inv">Закрыть</button></div>`;
@@ -1038,7 +1052,6 @@
             <div class="demo-hint">✨ Нажми на карту — перевернётся. ⚙️ Настройки — тема, громкость, выход.</div>
         `;
 
-        // Переворот карты
         const cardFlipper = document.getElementById('cardFlipper');
         let isFlipped = false;
         if(cardFlipper) cardFlipper.onclick = (e) => { e.stopPropagation(); isFlipped = !isFlipped; if(isFlipped) cardFlipper.classList.add('flipped'); else cardFlipper.classList.remove('flipped'); };
