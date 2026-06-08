@@ -13,17 +13,37 @@
         const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
         
         async function saveScoreToLeaderboard(username, score) {
-            const { error } = await supabase.from('leaderboard').insert([{ username: username, score: score }]);
-            if (error) console.error('Ошибка сохранения:', error);
-            else console.log('Рекорд сохранён!');
+            console.log(`[Leaderboard] Попытка сохранить рекорд: ${username} = ${score}`);
+            const { data, error } = await supabase
+                .from('leaderboard')
+                .insert([{ username: username, score: score }]);
+            if (error) {
+                console.error('[Leaderboard] Ошибка сохранения:', error);
+                return false;
+            }
+            console.log('[Leaderboard] Рекорд успешно сохранён!', data);
+            return true;
         }
         
         async function loadLeaderboard() {
-            const { data, error } = await supabase.from('leaderboard').select('username, score').order('score', { ascending: false }).limit(10);
+            console.log('[Leaderboard] Загрузка таблицы...');
+            const { data, error } = await supabase
+                .from('leaderboard')
+                .select('username, score')
+                .order('score', { ascending: false })
+                .limit(10);
             const container = document.getElementById('leaderboardList');
             if (!container) return;
-            if (error) { container.innerHTML = '<div class="tx-item">Ошибка загрузки</div>'; return; }
-            if (!data || data.length === 0) { container.innerHTML = '<div class="tx-item">Пока нет рекордов. Будь первым!</div>'; return; }
+            if (error) {
+                console.error('[Leaderboard] Ошибка загрузки:', error);
+                container.innerHTML = '<div class="tx-item">Ошибка загрузки таблицы</div>';
+                return;
+            }
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="tx-item">Пока нет рекордов. Будь первым!</div>';
+                return;
+            }
+            console.log('[Leaderboard] Загружено записей:', data.length);
             container.innerHTML = data.map((e,i)=>`<div class="tx-item"><span>${i+1}. ${escapeHtmlLeader(e.username)}</span><span style="font-weight:bold;color:#FFD966;">${e.score.toLocaleString('ru-RU')} ₽</span></div>`).join('');
         }
         function escapeHtmlLeader(str) { return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
@@ -43,6 +63,7 @@
     </script>
     
     <style>
+        /* ========== ВСЕ СТИЛИ (ТЕ ЖЕ, ЧТО В ТВОЁМ ФАЙЛЕ) ========== */
         * {
             margin: 0;
             padding: 0;
@@ -582,7 +603,7 @@
     let audioCtx = null;
     let currentVolume = 0.08;
     let modalElement = null;
-    let upgradeInProgress = false; // защита от повторного нажатия во время анимации апгрейда
+    let upgradeInProgress = false;
 
     function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
     function playClickSound() { try { initAudio(); const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.connect(gain); gain.connect(audioCtx.destination); osc.frequency.value = 880; gain.gain.value = currentVolume; osc.type = 'sine'; osc.start(); gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.25); osc.stop(audioCtx.currentTime + 0.2); audioCtx.resume(); } catch(e) {} }
@@ -630,15 +651,21 @@
     function logout() { sessionStorage.removeItem('bank_session'); render(); }
     function getBalance(nick) { return getBalances()[nick] || 0; }
     
+    // ========== ИСПРАВЛЕННАЯ setBalance С СОХРАНЕНИЕМ РЕКОРДА ==========
     function setBalance(nick, amount) {
         let b = getBalances();
+        let oldBalance = b[nick] || 0;
         b[nick] = amount;
         saveBalances(b);
+        
+        // Сохраняем максимальный баланс в Supabase
         let maxKey = `maxBalance_${nick}`;
         let currentMax = parseFloat(localStorage.getItem(maxKey) || 0);
-        if (amount > currentMax) {
-            localStorage.setItem(maxKey, amount);
-            saveScoreToLeaderboard(nick, amount);
+        let newMax = Math.max(currentMax, amount);
+        if (newMax > currentMax) {
+            localStorage.setItem(maxKey, newMax);
+            console.log(`[Leaderboard] Новый рекорд для ${nick}: ${newMax}₽ (старый был ${currentMax}₽)`);
+            saveScoreToLeaderboard(nick, newMax);
         }
     }
     
@@ -737,7 +764,7 @@
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal active';
         modalDiv.style.display = 'flex';
-        let itemsHtml = `<table class="chance-table"><table><th>Предмет</th><th>Стоимость (₽)</th><th>Шанс</th></tr>`;
+        let itemsHtml = `<table class="chance-table"><tr><th>Предмет</th><th>Стоимость (₽)</th><th>Шанс</th></tr>`;
         for (let item of caseData.items) { let chance = (item.weight / totalWeight * 100).toFixed(2); itemsHtml += `<tr><td>${item.name}</td><td>${item.value.toLocaleString('ru-RU')}</td><td>${chance}%<\/td></tr>`; }
         itemsHtml += `<\/table>`;
         modalDiv.innerHTML = `<div class="modal-content" style="max-width: 500px;"><h3>📋 Содержимое кейса: ${caseData.name}</h3>${itemsHtml}<button class="close-modal">Закрыть</button></div>`;
